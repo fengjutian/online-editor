@@ -157,9 +157,15 @@ const App: React.FC = () => {
       return [n];
     });
 
-  const setFileContent = (file: FileNodeType, content: string) => {
-    setFiles((prev) => updateTree(prev, file, (n) => ({ ...n, content })));
-  };
+    const setFileContent = (file: FileNodeType, content: string) => {
+      // 更新 files 状态
+      setFiles((prev) => updateTree(prev, file, (n) => ({ ...n, content })));
+      
+      // 同时更新 activeFile 状态，如果当前正在编辑的文件就是 activeFile
+      if (activeFile && activeFile.id === file.id) {
+        setActiveFile({ ...file, content });
+      }
+    };
 
   const addNode = (parent: FileNodeType, type: "file" | "folder") => {
     const newNode: FileNodeType = {
@@ -198,40 +204,30 @@ const App: React.FC = () => {
     }
   };
   
-  // 修改后
-  const runCode = async (runInput?: string) => {
-    if (!activeFile) return;
-    
-    // 从最新的 files 状态中查找 activeFile 的最新内容
-    const findActiveFileContent = (nodes: FileNodeType[]): string => {
-      for (const node of nodes) {
-        if (node.id === activeFile.id && node.type === "file") {
-          return node.content || "";
-        }
-        if (node.type === "folder" && node.children) {
-          const content = findActiveFileContent(node.children);
-          if (content !== undefined) return content;
-        }
-      }
-      return activeFile.content || "";
-    };
-    
-    const codeContent = runInput || findActiveFileContent(files);
-    const payload = { code: codeContent, language };
-    
-    setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
-    try {
-      const res = await fetch("http://localhost:3001/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
-    } catch {
-      setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
-    }
-  };
+const runCode = async (runInput?: string) => {
+  console.log(1234, runInput)
+
+  if (!activeFile) return;
+  
+  // 优先使用 runInput，如果没有则使用 activeFile.content
+  const codeContent = runInput || activeFile.content || "";
+  console.log(123456, codeContent)
+
+  const payload = { code: codeContent, language };
+  
+  setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
+  try {
+    const res = await fetch("http://localhost:3001/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
+  } catch {
+    setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
+  }
+};
 
   const clearConsole = () => setConsoleLogs([]);
 
@@ -249,6 +245,14 @@ const App: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    console.log('Files state updated:', files);
+  }, [files]);
+
+  useEffect(() => {
+    console.log('Active file updated:', activeFile);
+  }, [activeFile]);
+
   return (
     <div className="h-screen w-screen flex flex-col" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
       {/* 工具栏 */}
@@ -258,7 +262,19 @@ const App: React.FC = () => {
           <option value="python">Python</option>
           <option value="java">Java</option>
         </select>
-        <button onClick={() => runCode()} className="px-2 py-1 bg-blue-500 text-white">Run</button>
+        <button 
+          onClick={() => {
+            if (input.trim() !== "") {
+              console.log('Running terminal input code');
+              runCode(input);
+              setInput("");
+            } else {
+              console.log('Running editor code');
+              runCode();
+            }
+          }} 
+          className="px-2 py-1 bg-blue-500 text-white"
+        >Run</button>
         <button onClick={clearConsole} className="px-2 py-1 bg-red-500 text-white">Clear Console</button>
       </div>
 
