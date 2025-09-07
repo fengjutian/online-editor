@@ -1,35 +1,18 @@
 import React from 'react';
 import { EditorPlugin } from '../types';
 
-// 示例插件组件
-const ExampleSidebarPanel: React.FC<{ context: any }> = ({ context }) => {
+// 简化版示例插件组件
+const ExampleSidebarPanel = ({ context }: { context: any }) => {
   return (
     <div className="p-2 h-full bg-gray-100 dark:bg-gray-900 overflow-auto">
       <h3 className="font-medium mb-2">示例插件面板</h3>
-      <p>这是一个插件示例面板</p>
-      {context.activeFile && (
-        <div className="mt-2 p-2 bg-gray-200 dark:bg-gray-800 rounded">
-          <p>当前文件: {context.activeFile.name}</p>
-          <p>语言: {context.language}</p>
-        </div>
-      )}
-      <button 
-        className="mt-4 px-2 py-1 bg-blue-500 text-white rounded"
-        onClick={() => {
-          if (context.activeFile) {
-            context.setFileContent(context.activeFile, `// 由示例插件添加的代码\n${context.activeFile.content || ''}`);
-            context.addConsoleLog({ type: 'info', text: '示例插件已修改当前文件内容' });
-          }
-        }}
-      >
-        向当前文件添加代码
-      </button>
+      <p>这是一个示例插件面板</p>
     </div>
   );
 };
 
-// 示例状态栏项
-const ExampleStatusBarItem: React.FC<{ context: any }> = ({ context }) => {
+// 简化版示例状态栏项
+const ExampleStatusBarItem = ({ context }: { context: any }) => {
   return (
     <div className="px-2 py-1 text-sm">
       示例插件已激活
@@ -47,14 +30,8 @@ const ExamplePlugin: EditorPlugin = {
     author: 'Online Editor Team'
   },
   
-  activate: (context) => {
+  activate: (context: any) => {
     console.log('示例插件已激活');
-    
-    // 向控制台添加欢迎信息
-    context.addConsoleLog({
-      type: 'info',
-      text: '🎉 示例插件已激活！查看侧边栏和状态栏的新功能。'
-    });
   },
   
   deactivate: () => {
@@ -75,24 +52,10 @@ const ExamplePlugin: EditorPlugin = {
       {
         id: 'example-plugin:say-hello',
         title: '示例: 打招呼',
-        execute: (context) => {
+        execute: (context: any) => {
           context.addConsoleLog({ type: 'stdout', text: '你好！这是示例插件的命令输出。' });
         }
-      },
-      {
-        id: 'example-plugin:toggle-theme',
-        title: '示例: 切换主题',
-        execute: (context) => {
-          const newTheme = context.theme === 'vs-dark' ? 'vs' : 'vs-dark';
-          context.setTheme(newTheme);
-          context.addConsoleLog({ type: 'info', text: `主题已切换为: ${newTheme}` });
-        }
       }
-    ],
-    
-    fileIcons: [
-      { extension: 'plugin', icon: '🔌' },
-      { extension: 'demo', icon: '📝' }
     ],
     
     statusBarItems: [

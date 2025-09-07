@@ -1,4 +1,5 @@
 import PluginManager from './PluginManager';
+import { EditorPlugin } from '../types'; // 添加这一行导入
 
 class PluginLoader {
   // 从目录加载插件

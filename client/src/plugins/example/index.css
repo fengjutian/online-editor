@@ -1,0 +1,5 @@
+/* 示例插件样式 */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
