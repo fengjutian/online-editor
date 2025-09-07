@@ -210,6 +210,9 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ activeFile, setFileContent, t
   );
 };
 
+// 导入 XtermTerminal 组件
+import XtermTerminal from './components/XtermTerminal';
+
 const App: React.FC = () => {
   const [files, setFiles] = useState<FileNodeType[]>([
     { id: "1", name: "src", type: "folder", children: [{ id: "2", name: "main.js", type: "file", content: "// JS code" }] },
@@ -283,14 +286,11 @@ const App: React.FC = () => {
     setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
   };
 
+  // 修改 handleKeyDown 函数，因为我们现在不需要它了
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (input.trim() !== "") runCode(input);
-      setInput("");
-    }
+  // 这个函数现在可以留空，因为 XtermTerminal 会处理命令输入
   };
-  
+
 const runCode = async (runInput?: string) => {
   console.log(1234, runInput)
 
@@ -421,22 +421,13 @@ const runCode = async (runInput?: string) => {
         </div>
         <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
-        {/* 右侧终端 */}
+        {/* 右侧终端 - 使用新的 XtermTerminal 组件 */}
         <div style={{ width: `${rightWidth}%`, display: "flex", flexDirection: "column" }}>
-          <div ref={consoleRef} className="flex-1 bg-black p-2 font-mono overflow-auto">
-            {consoleLogs.map((line, idx) => (
-              <div key={idx} style={{ color: line.type === "stdout" ? "#0f0" : line.type === "error" ? "#f55" : "#fff" }}>
-                {line.text}
-              </div>
-            ))}
-          </div>
-          <input
-            type="text"
-            placeholder="Type code and press Enter"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="bg-black text-white p-2 outline-none font-mono"
+          <XtermTerminal
+            consoleLogs={consoleLogs}
+            onCommand={(cmd) => {
+              runCode(cmd);
+            }}
           />
         </div>
       </div>
