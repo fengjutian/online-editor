@@ -18,9 +18,19 @@ interface FileNodeProps {
   addNode: (parent: FileNodeType, type: "file" | "folder") => void;
   deleteNode: (node: FileNodeType) => void;
   renameNode: (node: FileNodeType, newName: string) => void;
+  activeFile: FileNodeType | null; // 添加这个属性
 }
 
-const FileNode: React.FC<FileNodeProps> = ({ node, level = 0, setActiveFile, addNode, deleteNode, renameNode }) => {
+// 更新 FileNode 组件，添加 VSCode 风格样式
+const FileNode: React.FC<FileNodeProps> = ({ 
+  node, 
+  level = 0, 
+  setActiveFile, 
+  addNode, 
+  deleteNode, 
+  renameNode,
+  activeFile // 接收 activeFile 属性
+}) => {
   const [expanded, setExpanded] = useState<boolean>(true);
   const [editing, setEditing] = useState<boolean>(false);
   const [name, setName] = useState<string>(node.name);
@@ -34,13 +44,56 @@ const FileNode: React.FC<FileNodeProps> = ({ node, level = 0, setActiveFile, add
     setEditing(false);
   };
 
+  // 检测文件是否被选中
+  const isActive = node.type === "file" && activeFile && activeFile.id === node.id;
+
+  // 根据文件扩展名选择图标
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    switch (extension) {
+      case 'js':
+      case 'jsx':
+        return '🟨'; // JavaScript
+      case 'ts':
+      case 'tsx':
+        return '🟦'; // TypeScript
+      case 'py':
+        return '🐍'; // Python
+      case 'java':
+        return '☕'; // Java
+      case 'html':
+        return '🔷'; // HTML
+      case 'css':
+        return '🎨'; // CSS
+      case 'md':
+        return '📝'; // Markdown
+      default:
+        return '📄'; // 默认文件
+    }
+  };
+
   return (
-    <div style={{ paddingLeft: `${level * 16}px` }}>
-      <div className="flex items-center gap-1">
+    <div className="file-node">
+      <div 
+        style={{ paddingLeft: `${level * 16}px` }} 
+        className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${isActive ? 'bg-blue-600 text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+      >
         {node.type === "folder" && (
-          <span onClick={toggleExpand} className="cursor-pointer">{expanded ? "📂" : "📁"}</span>
+          <span 
+            onClick={toggleExpand} 
+            className="cursor-pointer flex-shrink-0 w-4 h-4 flex items-center justify-center"
+          >
+            {expanded ? '▼' : '►'}
+          </span>
         )}
-        {node.type === "file" && <span>📄</span>}
+        {node.type === "file" && (
+          <span className="flex-shrink-0">
+            {getFileIcon(node.name)}
+          </span>
+        )}
+        {node.type === "folder" && !editing && (
+          <span className="flex-shrink-0">📁</span>
+        )}
         {editing ? (
           <input
             value={name}
@@ -48,27 +101,32 @@ const FileNode: React.FC<FileNodeProps> = ({ node, level = 0, setActiveFile, add
             onBlur={handleRename}
             onKeyDown={(e) => e.key === "Enter" && handleRename()}
             autoFocus
-            className="border px-1"
+            className={`flex-grow border rounded px-1 py-0.5 ${isActive ? 'bg-blue-700 text-white' : ''}`}
+            style={{ fontSize: 'inherit' }}
           />
         ) : (
           <span
             onDoubleClick={() => setEditing(true)}
             onClick={() => node.type === "file" && setActiveFile(node)}
-            className="cursor-pointer"
+            className={`cursor-pointer flex-grow py-0.5 ${node.type === 'file' ? 'truncate' : ''}`}
           >
             {node.name}
           </span>
         )}
-        {node.type === "folder" && (
-          <>
-            <button onClick={() => addNode(node, "file")} className="ml-1 text-blue-500">+File</button>
-            <button onClick={() => addNode(node, "folder")} className="ml-1 text-blue-500">+Folder</button>
-          </>
+        {!editing && node.type === "folder" && (
+          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => addNode(node, "file")} className="file-btn mr-1">+File</button>
+            <button onClick={() => addNode(node, "folder")} className="file-btn mr-1">+Folder</button>
+          </div>
         )}
-        <button
-          onClick={() => deleteNode(node)}
-          className="ml-1 text-red-500"
-        >x</button>
+        {!editing && (
+          <button
+            onClick={() => deleteNode(node)}
+            className="file-btn text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            ×
+          </button>
+        )}
       </div>
       {expanded && node.type === "folder" && node.children?.map((child) => (
         <FileNode
@@ -79,6 +137,7 @@ const FileNode: React.FC<FileNodeProps> = ({ node, level = 0, setActiveFile, add
           addNode={addNode}
           deleteNode={deleteNode}
           renameNode={renameNode}
+          activeFile={activeFile} // 递归调用时传递 activeFile
         />
       ))}
     </div>
@@ -91,20 +150,35 @@ interface FileExplorerTreeProps {
   addNode: (parent: FileNodeType, type: "file" | "folder") => void;
   deleteNode: (node: FileNodeType) => void;
   renameNode: (node: FileNodeType, newName: string) => void;
+  activeFile: FileNodeType | null; // 添加这个属性
 }
 
-const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({ files, setActiveFile, addNode, deleteNode, renameNode }) => (
-  <div className="bg-gray-200 w-64 p-2 overflow-auto h-full">
-    {files.map((node) => (
-      <FileNode
-        key={node.id}
-        node={node}
-        setActiveFile={setActiveFile}
-        addNode={addNode}
-        deleteNode={deleteNode}
-        renameNode={renameNode}
-      />
-    ))}
+const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({ 
+  files, 
+  setActiveFile, 
+  addNode, 
+  deleteNode, 
+  renameNode,
+  activeFile // 接收这个属性
+}) => (
+  <div className="bg-gray-100 dark:bg-gray-900 w-64 p-1 overflow-auto h-full text-sm">
+    <div className="p-1 mb-1 font-medium text-gray-500 dark:text-gray-400">
+      Explorer
+    </div>
+    <div className="group">
+      {files.map((node) => (
+        <FileNode
+          key={node.id}
+          node={node}
+          level={0}
+          setActiveFile={setActiveFile}
+          addNode={addNode}
+          deleteNode={deleteNode}
+          renameNode={renameNode}
+          activeFile={activeFile} // 传递给 FileNode
+        />
+      ))}
+    </div>
   </div>
 );
 
@@ -288,6 +362,7 @@ const runCode = async (runInput?: string) => {
             addNode={addNode}
             deleteNode={deleteNode}
             renameNode={renameNode}
+            activeFile={activeFile} // 添加这个属性
           />
         </div>
         <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />

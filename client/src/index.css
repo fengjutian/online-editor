@@ -1,3 +1,101 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* 自定义滚动条（类似 VS Code） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 100, 100, 0.8);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 文件节点样式 */
+.file-node {
+  user-select: none;
+  font-size: 13px;
+}
+
+/* 文件节点悬停效果 */
+.file-node > div:hover {
+  background-color: rgba(156, 163, 175, 0.2);
+}
+
+/* 暗黑模式支持 */
+.dark .file-node > div:hover {
+  background-color: rgba(107, 114, 128, 0.3);
+}
+
+/* 文件/文件夹按钮样式 */
+.file-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  color: #0366d6;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* 只有在父元素悬停时显示按钮 */
+.file-node > div:hover .file-btn {
+  opacity: 1;
+}
+
+.file-btn:hover {
+  background-color: rgba(156, 163, 175, 0.2);
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+/* 选中文件高亮 */
+.file-node > div.bg-blue-600 {
+  background-color: #0e639c !important;
+}
+
+/* 终端输入框样式 */
+.terminal-input {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  padding: 8px 10px;
+  outline: none;
+  border: none;
+  border-top: 1px solid #333;
+}
+
+/* 文件夹展开/折叠箭头样式 */
+.file-node span.cursor-pointer:has(+ span:contains('📁')) {
+  font-size: 10px;
+  color: #666;
+}
+
+/* 暗黑模式适配 */
+.dark {
+  color-scheme: dark;
+}
+
+.dark .bg-gray-100 {
+  background-color: #1e1e1e;
+}
+
+.dark .text-gray-500 {
+  color: #cccccc;
+}
+
+/* 文件名截断处理 */
+.file-node span.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
