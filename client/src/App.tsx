@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import Editor from "@monaco-editor/react";
+import Editor, { loader } from "@monaco-editor/react";
 
 type FileNodeType = {
   id: string; // 唯一 ID
@@ -185,14 +185,25 @@ const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({
 interface EditorPanelProps {
   activeFile: FileNodeType | null;
   setFileContent: (file: FileNodeType, content: string) => void;
+  theme: string;
 }
 
-const EditorPanel: React.FC<EditorPanelProps> = ({ activeFile, setFileContent }) => {
-  if (!activeFile) return <div className="flex-1 p-2">Select a file</div>;
+
+const EditorPanel: React.FC<EditorPanelProps> = ({ activeFile, setFileContent, theme }) => {
+  if (!activeFile) return <div className="flex-1 p-2">选择一个文件</div>;
+
+
   return (
     <Editor
       height="100vh"
+      theme={theme}  
       defaultLanguage="javascript"
+      options={{
+        fontSize: 14,
+        minimap: { enabled: false },
+        scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+        automaticLayout: true,
+      }}
       value={activeFile.content}
       onChange={(val) => setFileContent(activeFile, val || "")}
     />
@@ -204,6 +215,8 @@ const App: React.FC = () => {
     { id: "1", name: "src", type: "folder", children: [{ id: "2", name: "main.js", type: "file", content: "// JS code" }] },
     { id: "3", name: "README.md", type: "file", content: "# Project" },
   ]);
+
+
 
   const [activeFile, setActiveFile] = useState<FileNodeType | null>(null);
   const [language, setLanguage] = useState<string>("javascript");
@@ -305,6 +318,9 @@ const runCode = async (runInput?: string) => {
 
   const clearConsole = () => setConsoleLogs([]);
 
+  
+  const [theme, setTheme] = useState("vs-dark"); // 默认 VS Code 深色
+
   const startDrag = (bar: "left" | "center") => { dragInfo.current = { dragging: true, bar }; };
   const stopDrag = () => { dragInfo.current.dragging = false; };
   const onDrag = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -327,6 +343,30 @@ const runCode = async (runInput?: string) => {
     console.log('Active file updated:', activeFile);
   }, [activeFile]);
 
+    useEffect(() => {
+  loader.init().then((monaco) => {
+    monaco.editor.defineTheme("vscode-dark", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "6A9955" },
+        { token: "string", foreground: "CE9178" },
+        { token: "keyword", foreground: "569CD6" },
+        { token: "number", foreground: "B5CEA8" },
+      ],
+      colors: {
+        "editor.background": "#1E1E1E",
+        "editor.foreground": "#D4D4D4",
+        "editorLineNumber.foreground": "#858585",
+        "editorLineNumber.activeForeground": "#C6C6C6",
+        "editorCursor.foreground": "#AEAFAD",
+      },
+    });
+  });
+}, []);
+
+
+
   return (
     <div className="h-screen w-screen flex flex-col" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
       {/* 工具栏 */}
@@ -336,6 +376,14 @@ const runCode = async (runInput?: string) => {
           <option value="python">Python</option>
           <option value="java">Java</option>
         </select>
+
+        {/* ✅ 新增：主题切换 */}
+        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+          <option value="vs">Light (VS)</option>
+          <option value="vs-dark">Dark (VS)</option>
+          <option value="vscode-dark">Dark+ (Custom)</option>
+        </select>
+
         <button 
           onClick={() => {
             if (input.trim() !== "") {
@@ -369,7 +417,7 @@ const runCode = async (runInput?: string) => {
 
         {/* 中间编辑器 */}
         <div style={{ width: `${centerWidth}%` }}>
-          <EditorPanel activeFile={activeFile} setFileContent={setFileContent} />
+          <EditorPanel activeFile={activeFile} setFileContent={setFileContent} theme={theme} />
         </div>
         <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
