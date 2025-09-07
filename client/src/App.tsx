@@ -197,10 +197,28 @@ const App: React.FC = () => {
       setInput("");
     }
   };
-
+  
+  // 修改后
   const runCode = async (runInput?: string) => {
     if (!activeFile) return;
-    const payload = { code: runInput || activeFile.content, language };
+    
+    // 从最新的 files 状态中查找 activeFile 的最新内容
+    const findActiveFileContent = (nodes: FileNodeType[]): string => {
+      for (const node of nodes) {
+        if (node.id === activeFile.id && node.type === "file") {
+          return node.content || "";
+        }
+        if (node.type === "folder" && node.children) {
+          const content = findActiveFileContent(node.children);
+          if (content !== undefined) return content;
+        }
+      }
+      return activeFile.content || "";
+    };
+    
+    const codeContent = runInput || findActiveFileContent(files);
+    const payload = { code: codeContent, language };
+    
     setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
     try {
       const res = await fetch("http://localhost:3001/run", {
