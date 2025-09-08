@@ -43,7 +43,7 @@ export interface PluginContributions {
     component: React.FC<{ context: EditorContext }>;
   }>;
   
-  // 命令
+  // 命令 - 添加commands属性
   commands?: Array<{
     id: string;
     title: string;

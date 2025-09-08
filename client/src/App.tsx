@@ -1,16 +1,30 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from 'react';
 import Editor, { loader } from "@monaco-editor/react";
 
-type FileNodeType = {
+// 导入XtermTerminal组件
+import XtermTerminal from './components/XtermTerminal';
+
+// 导入插件系统
+import PluginLoader from './plugins/core/PluginLoader';
+import PluginManager from './plugins/core/PluginManager';
+import { EditorContext as EditorContextType } from './plugins/types'; // 重命名导入以避免冲突
+
+// 文件节点类型定义 - 只保留一个定义
+interface FileNodeType {
   id: string; // 唯一 ID
   name: string;
   type: "file" | "folder";
   content?: string;
   children?: FileNodeType[];
-};
+}
 
-type ConsoleLog = { type: "stdout" | "error" | "info"; text: string };
+// 控制台日志类型 - 只保留一个定义
+interface ConsoleLog {
+  type: "stdout" | "stderr" | "error" | "info"; // 添加stderr类型
+  text: string;
+}
 
+// 文件节点属性接口
 interface FileNodeProps {
   node: FileNodeType;
   level?: number;
@@ -21,7 +35,7 @@ interface FileNodeProps {
   activeFile: FileNodeType | null; // 添加这个属性
 }
 
-// 更新 FileNode 组件，添加 VSCode 风格样式
+// 更新FileNode组件，添加VSCode风格样式
 const FileNode: React.FC<FileNodeProps> = ({ 
   node, 
   level = 0, 
@@ -29,7 +43,7 @@ const FileNode: React.FC<FileNodeProps> = ({
   addNode, 
   deleteNode, 
   renameNode,
-  activeFile // 接收 activeFile 属性
+  activeFile // 接收activeFile属性
 }) => {
   const [expanded, setExpanded] = useState<boolean>(true);
   const [editing, setEditing] = useState<boolean>(false);
@@ -137,13 +151,14 @@ const FileNode: React.FC<FileNodeProps> = ({
           addNode={addNode}
           deleteNode={deleteNode}
           renameNode={renameNode}
-          activeFile={activeFile} // 递归调用时传递 activeFile
+          activeFile={activeFile} // 递归调用时传递activeFile
         />
       ))}
     </div>
   );
 };
 
+// 文件浏览器树属性接口
 interface FileExplorerTreeProps {
   files: FileNodeType[];
   setActiveFile: (file: FileNodeType) => void;
@@ -153,6 +168,7 @@ interface FileExplorerTreeProps {
   activeFile: FileNodeType | null; // 添加这个属性
 }
 
+// 文件浏览器树组件
 const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({ 
   files, 
   setActiveFile, 
@@ -175,23 +191,23 @@ const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({
           addNode={addNode}
           deleteNode={deleteNode}
           renameNode={renameNode}
-          activeFile={activeFile} // 传递给 FileNode
+          activeFile={activeFile} // 传递给FileNode
         />
       ))}
     </div>
   </div>
 );
 
+// 编辑器面板属性接口
 interface EditorPanelProps {
   activeFile: FileNodeType | null;
   setFileContent: (file: FileNodeType, content: string) => void;
   theme: string;
 }
 
-
+// 编辑器面板组件
 const EditorPanel: React.FC<EditorPanelProps> = ({ activeFile, setFileContent, theme }) => {
   if (!activeFile) return <div className="flex-1 p-2">选择一个文件</div>;
-
 
   return (
     <Editor
@@ -210,33 +226,193 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ activeFile, setFileContent, t
   );
 };
 
-// 导入 XtermTerminal 组件
-import XtermTerminal from './components/XtermTerminal';
+// 创建全局上下文以在组件间共享编辑器状态
+const AppEditorContext = React.createContext<any>(null); // 使用React.createContext
 
+// 状态栏组件
+const StatusBar: React.FC = () => {
+  const [statusBarItems, setStatusBarItems] = useState<any[]>([]);
+  const context = React.useContext(AppEditorContext); // 使用重命名后的Context
+  
+  useEffect(() => {
+    const updateStatusBarItems = () => {
+      const contributions = PluginManager.getPluginContributions();
+      if (contributions.statusBarItems) {
+        // 按优先级排序
+        const sortedItems = [...contributions.statusBarItems].sort((a, b) => 
+          (b.priority || 0) - (a.priority || 0)
+        );
+        setStatusBarItems(sortedItems);
+      }
+    };
+    
+    updateStatusBarItems();
+  }, []);
+  
+  return (
+    <div className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 text-sm p-1 border-t">
+      <div className="flex items-center">
+        {statusBarItems.filter(item => item.alignment !== 'right').map(item => (
+          <div key={item.id} className="px-2">
+            {item.component({ context })}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center">
+        {statusBarItems.filter(item => item.alignment === 'right').map(item => (
+          <div key={item.id} className="px-2">
+            {item.component({ context })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 插件侧边栏面板组件
+const PluginSidebarPanels: React.FC = () => {
+  const [panels, setPanels] = useState<any[]>([]);
+  const [activePanelId, setActivePanelId] = useState<string | null>(null);
+  const context = React.useContext(AppEditorContext); // 使用重命名后的Context
+  
+  useEffect(() => {
+    const updatePanels = () => {
+      const contributions = PluginManager.getPluginContributions();
+      if (contributions.sidebarPanels) {
+        setPanels(contributions.sidebarPanels);
+        // 默认激活第一个面板
+        if (contributions.sidebarPanels.length > 0 && !activePanelId) {
+          setActivePanelId(contributions.sidebarPanels[0].id);
+        }
+      }
+    };
+    
+    updatePanels();
+  }, []);
+  
+  if (panels.length === 0) return null;
+  
+  return (
+    <div className="border-t flex flex-col">
+      <div className="flex p-1 bg-gray-200 dark:bg-gray-800">
+        {panels.map(panel => (
+          <button
+            key={panel.id}
+            onClick={() => setActivePanelId(panel.id)}
+            className={`flex items-center px-2 py-1 rounded-md text-xs mr-1 transition-colors ${
+              activePanelId === panel.id 
+                ? 'bg-blue-500 text-white' 
+                : 'hover:bg-gray-300 dark:hover:bg-gray-700'
+            }`}
+          >
+            <span className="mr-1">{panel.icon}</span>
+            <span>{panel.title}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-auto">
+        {panels.map(panel => (
+          activePanelId === panel.id && (
+            <div key={panel.id} className="h-full">
+              {panel.component({ context })}
+            </div>
+          )
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 主应用组件
 const App: React.FC = () => {
+  // 状态定义
   const [files, setFiles] = useState<FileNodeType[]>([
     { id: "1", name: "src", type: "folder", children: [{ id: "2", name: "main.js", type: "file", content: "// JS code" }] },
     { id: "3", name: "README.md", type: "file", content: "# Project" },
   ]);
 
-
-
   const [activeFile, setActiveFile] = useState<FileNodeType | null>(null);
   const [language, setLanguage] = useState<string>("javascript");
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [input, setInput] = useState<string>("");
+  const [theme, setTheme] = useState<string>("vs-dark");
 
   const consoleRef = useRef<HTMLDivElement | null>(null);
-
   const [leftWidth, setLeftWidth] = useState<number>(20);
   const [centerWidth, setCenterWidth] = useState<number>(50);
   const [rightWidth, setRightWidth] = useState<number>(30);
   const dragInfo = useRef<{ dragging: boolean; bar: "left" | "center" | null }>({ dragging: false, bar: null });
 
+  // 添加缺失的addConsoleLog函数
+  const addConsoleLog = (log: ConsoleLog) => {
+    setConsoleLogs(prev => [...prev, log]);
+  };
+
+  // 初始化插件系统
+  useEffect(() => {
+    const initializePlugins = async () => {
+      try {
+        // 创建编辑器上下文
+        const editorContext: EditorContextType = { // 使用类型别名
+          activeFile, 
+          files,
+          setActiveFile,
+          setFileContent,
+          consoleLogs,
+          addConsoleLog,
+          language,
+          setLanguage,
+          theme,
+          setTheme
+        };
+        
+        // 设置插件管理器的上下文
+        PluginManager.setContext(editorContext);
+        
+        // 加载插件
+        await PluginLoader.loadPluginsFromDirectory();
+        
+        // 激活所有插件
+        PluginManager.activateAllPlugins();
+        
+        console.log('Plugins initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize plugins:', error);
+      }
+    };
+    
+    initializePlugins();
+    
+    // 清理函数
+    return () => {
+      PluginManager.deactivateAllPlugins();
+    };
+  }, []);
+  
+  // 当编辑器状态变更时，更新插件上下文
+  useEffect(() => {
+    const editorContext: EditorContextType = { // 使用类型别名
+      activeFile, 
+      files,
+      setActiveFile,
+      setFileContent,
+      consoleLogs,
+      addConsoleLog,
+      language,
+      setLanguage,
+      theme,
+      setTheme
+    };
+    
+    PluginManager.setContext(editorContext);
+  }, [activeFile, files, consoleLogs, language, theme]);
+
+  // 控制台滚动到最新日志
   useEffect(() => {
     if (consoleRef.current) consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
   }, [consoleLogs]);
 
+  // 更新文件树
   const updateTree = (nodes: FileNodeType[], target: FileNodeType, updater: (n: FileNodeType) => FileNodeType | null): FileNodeType[] =>
     nodes.flatMap((n) => {
       if (n === target) {
@@ -247,16 +423,15 @@ const App: React.FC = () => {
       return [n];
     });
 
-    const setFileContent = (file: FileNodeType, content: string) => {
-      // 更新 files 状态
-      setFiles((prev) => updateTree(prev, file, (n) => ({ ...n, content })));
-      
-      // 同时更新 activeFile 状态，如果当前正在编辑的文件就是 activeFile
-      if (activeFile && activeFile.id === file.id) {
-        setActiveFile({ ...file, content });
-      }
-    };
+  // 设置文件内容
+  const setFileContent = (file: FileNodeType, content: string) => {
+    setFiles((prev) => updateTree(prev, file, (n) => ({ ...n, content })));
+    if (activeFile && activeFile.id === file.id) {
+      setActiveFile({ ...file, content });
+    }
+  };
 
+  // 添加节点
   const addNode = (parent: FileNodeType, type: "file" | "folder") => {
     const newNode: FileNodeType = {
       id: Date.now().toString(),
@@ -268,6 +443,7 @@ const App: React.FC = () => {
     setFiles((prev) => updateTree(prev, parent, (n) => ({ ...n, children: [...(n.children || []), newNode] })));
   };
 
+  // 删除节点
   const deleteNode = (node: FileNodeType) => {
     if (node.type === "folder" && node.children && node.children.length > 0) {
       if (!window.confirm(`Delete folder "${node.name}" and all its contents?`)) return;
@@ -282,45 +458,45 @@ const App: React.FC = () => {
     if (activeFile === node) setActiveFile(null);
   };
 
+  // 重命名节点
   const renameNode = (node: FileNodeType, newName: string) => {
     setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
   };
 
-  // 修改 handleKeyDown 函数，因为我们现在不需要它了
+  // 处理键盘事件（保留为空，因为XtermTerminal会处理命令输入）
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  // 这个函数现在可以留空，因为 XtermTerminal 会处理命令输入
+    // 留空，因为XtermTerminal会处理命令输入
   };
 
-const runCode = async (runInput?: string) => {
-  console.log(1234, runInput)
+  // 运行代码
+  const runCode = async (runInput?: string) => {
+    console.log(1234, runInput)
 
-  if (!activeFile) return;
-  
-  // 优先使用 runInput，如果没有则使用 activeFile.content
-  const codeContent = runInput || activeFile.content || "";
-  console.log(123456, codeContent)
+    if (!activeFile) return;
+    
+    // 优先使用runInput，如果没有则使用activeFile.content
+    const codeContent = runInput || activeFile.content || "";
+    
+    const payload = { code: codeContent, language };
+    
+    setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
+    try {
+      const res = await fetch("http://localhost:3001/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
+    } catch {
+      setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
+    }
+  };
 
-  const payload = { code: codeContent, language };
-  
-  setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
-  try {
-    const res = await fetch("http://localhost:3001/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
-  } catch {
-    setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
-  }
-};
-
+  // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
-
   
-  const [theme, setTheme] = useState("vs-dark"); // 默认 VS Code 深色
-
+  // 拖拽相关函数
   const startDrag = (bar: "left" | "center") => { dragInfo.current = { dragging: true, bar }; };
   const stopDrag = () => { dragInfo.current.dragging = false; };
   const onDrag = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -335,103 +511,116 @@ const runCode = async (runInput?: string) => {
     }
   };
 
+  // Monaco编辑器主题初始化
   useEffect(() => {
-    console.log('Files state updated:', files);
-  }, [files]);
-
-  useEffect(() => {
-    console.log('Active file updated:', activeFile);
-  }, [activeFile]);
-
-    useEffect(() => {
-  loader.init().then((monaco) => {
-    monaco.editor.defineTheme("vscode-dark", {
-      base: "vs-dark",
-      inherit: true,
-      rules: [
-        { token: "comment", foreground: "6A9955" },
-        { token: "string", foreground: "CE9178" },
-        { token: "keyword", foreground: "569CD6" },
-        { token: "number", foreground: "B5CEA8" },
-      ],
-      colors: {
-        "editor.background": "#1E1E1E",
-        "editor.foreground": "#D4D4D4",
-        "editorLineNumber.foreground": "#858585",
-        "editorLineNumber.activeForeground": "#C6C6C6",
-        "editorCursor.foreground": "#AEAFAD",
-      },
+    loader.init().then((monaco) => {
+      monaco.editor.defineTheme("vscode-dark", {
+        base: "vs-dark",
+        inherit: true,
+        rules: [
+          { token: "comment", foreground: "6A9955" },
+          { token: "string", foreground: "CE9178" },
+          { token: "keyword", foreground: "569CD6" },
+          { token: "number", foreground: "B5CEA8" },
+        ],
+        colors: {
+          "editor.background": "#1E1E1E",
+          "editor.foreground": "#D4D4D4",
+          "editorLineNumber.foreground": "#858585",
+          "editorLineNumber.activeForeground": "#C6C6C6",
+          "editorCursor.foreground": "#AEAFAD",
+        },
+      });
     });
-  });
-}, []);
+  }, []);
 
-
+  // 创建传递给上下文的value
+  const contextValue = {
+    activeFile,
+    files,
+    setActiveFile,
+    setFileContent,
+    consoleLogs,
+    addConsoleLog,
+    language,
+    setLanguage,
+    theme,
+    setTheme
+  };
 
   return (
-    <div className="h-screen w-screen flex flex-col" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
-      {/* 工具栏 */}
-      <div className="p-2 bg-gray-100 flex gap-2 items-center">
-        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option value="javascript">JavaScript</option>
-          <option value="python">Python</option>
-          <option value="java">Java</option>
-        </select>
+    <AppEditorContext.Provider value={contextValue}> {/* 修改为正确的Context名称 */}
+      <div className="h-screen w-screen flex flex-col" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
+        {/* 工具栏 */}
+        <div className="p-2 bg-gray-100 flex gap-2 items-center">
+          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+          </select>
 
-        {/* ✅ 新增：主题切换 */}
-        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-          <option value="vs">Light (VS)</option>
-          <option value="vs-dark">Dark (VS)</option>
-          <option value="vscode-dark">Dark+ (Custom)</option>
-        </select>
+          {/* 主题切换 */}
+          <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+            <option value="vs">Light (VS)</option>
+            <option value="vs-dark">Dark (VS)</option>
+            <option value="vscode-dark">Dark+ (Custom)</option>
+          </select>
 
-        <button 
-          onClick={() => {
-            if (input.trim() !== "") {
-              console.log('Running terminal input code');
-              runCode(input);
-              setInput("");
-            } else {
-              console.log('Running editor code');
-              runCode();
-            }
-          }} 
-          className="px-2 py-1 bg-blue-500 text-white"
-        >Run</button>
-        <button onClick={clearConsole} className="px-2 py-1 bg-red-500 text-white">Clear Console</button>
+          <button 
+            onClick={() => {
+              if (input.trim() !== "") {
+                console.log('Running terminal input code');
+                runCode(input);
+                setInput("");
+              } else {
+                console.log('Running editor code');
+                runCode();
+              }
+            }} 
+            className="px-2 py-1 bg-blue-500 text-white"
+          >Run</button>
+          <button onClick={clearConsole} className="px-2 py-1 bg-red-500 text-white">Clear Console</button>
+        </div>
+
+        {/* 三栏布局 */}
+        <div className="flex-1 flex relative">
+          {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
+          <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}>
+            <FileExplorerTree
+              files={files}
+              setActiveFile={setActiveFile}
+              addNode={addNode}
+              deleteNode={deleteNode}
+              renameNode={renameNode}
+              activeFile={activeFile}
+            />
+            
+            {/* 插件侧边栏面板容器 */}
+            <PluginSidebarPanels />
+          </div>
+          <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
+
+          {/* 中间编辑器 */}
+          <div style={{ width: `${centerWidth}%` }}>
+            <EditorPanel activeFile={activeFile} setFileContent={setFileContent} theme={theme} />
+          </div>
+          <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
+
+          {/* 右侧终端 - 使用新的XtermTerminal组件 */}
+          <div style={{ width: `${rightWidth}%`, display: "flex", flexDirection: "column" }}>
+            <XtermTerminal
+              consoleLogs={consoleLogs}
+              onCommand={(cmd) => {
+                runCode(cmd);
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* 状态栏 */}
+        <StatusBar />
       </div>
-
-      {/* 三栏 */}
-      <div className="flex-1 flex relative">
-        {/* 左侧文件管理器 */}
-        <div style={{ width: `${leftWidth}%` }}>
-          <FileExplorerTree
-            files={files}
-            setActiveFile={setActiveFile}
-            addNode={addNode}
-            deleteNode={deleteNode}
-            renameNode={renameNode}
-            activeFile={activeFile} // 添加这个属性
-          />
-        </div>
-        <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
-
-        {/* 中间编辑器 */}
-        <div style={{ width: `${centerWidth}%` }}>
-          <EditorPanel activeFile={activeFile} setFileContent={setFileContent} theme={theme} />
-        </div>
-        <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
-
-        {/* 右侧终端 - 使用新的 XtermTerminal 组件 */}
-        <div style={{ width: `${rightWidth}%`, display: "flex", flexDirection: "column" }}>
-          <XtermTerminal
-            consoleLogs={consoleLogs}
-            onCommand={(cmd) => {
-              runCode(cmd);
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    </AppEditorContext.Provider> 
   );
 };
 
