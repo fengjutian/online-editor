@@ -1,8 +1,8 @@
 import React from 'react';
-import { EditorPlugin } from '../types';
+import { EditorPlugin, EditorContext } from '../types';
 
-// 简化版示例插件组件
-const ExampleSidebarPanel = ({ context }: { context: any }) => {
+// 示例插件组件
+const ExampleSidebarPanel: React.FC<{ context: EditorContext }> = ({ context }) => {
   return (
     <div className="p-2 h-full bg-gray-100 dark:bg-gray-900 overflow-auto">
       <h3 className="font-medium mb-2">示例插件面板</h3>
@@ -11,8 +11,8 @@ const ExampleSidebarPanel = ({ context }: { context: any }) => {
   );
 };
 
-// 简化版示例状态栏项
-const ExampleStatusBarItem = ({ context }: { context: any }) => {
+// 示例状态栏项
+const ExampleStatusBarItem: React.FC<{ context: EditorContext }> = ({ context }) => {
   return (
     <div className="px-2 py-1 text-sm">
       示例插件已激活
@@ -30,7 +30,7 @@ const ExamplePlugin: EditorPlugin = {
     author: 'Online Editor Team'
   },
   
-  activate: (context: any) => {
+  activate: (context: EditorContext) => {
     console.log('示例插件已激活');
   },
   
@@ -52,7 +52,7 @@ const ExamplePlugin: EditorPlugin = {
       {
         id: 'example-plugin:say-hello',
         title: '示例: 打招呼',
-        execute: (context: any) => {
+        execute: (context: EditorContext) => {
           context.addConsoleLog({ type: 'stdout', text: '你好！这是示例插件的命令输出。' });
         }
       }
