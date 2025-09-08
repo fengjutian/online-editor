@@ -273,52 +273,66 @@ const StatusBar: React.FC = () => {
 const PluginSidebarPanels: React.FC = () => {
   const [panels, setPanels] = useState<any[]>([]);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
-  const context = React.useContext(AppEditorContext); // 使用重命名后的Context
+  const context = React.useContext(AppEditorContext);
   
   useEffect(() => {
-    const updatePanels = () => {
+    try {
+      // 获取插件贡献点
       const contributions = PluginManager.getPluginContributions();
-      if (contributions.sidebarPanels) {
+      console.log('Plugin contributions:', contributions);
+      
+      if (contributions.sidebarPanels && contributions.sidebarPanels.length > 0) {
         setPanels(contributions.sidebarPanels);
         // 默认激活第一个面板
-        if (contributions.sidebarPanels.length > 0 && !activePanelId) {
+        if (!activePanelId) {
           setActivePanelId(contributions.sidebarPanels[0].id);
         }
+      } else {
+        console.log('No sidebar panels found in plugin contributions');
+        setPanels([]);
       }
-    };
-    
-    updatePanels();
-  }, []);
-  
-  if (panels.length === 0) return null;
+    } catch (error) {
+      console.error('Error fetching plugin contributions:', error);
+    }
+  }, []); // 只在组件挂载时运行一次
   
   return (
     <div className="border-t flex flex-col">
-      <div className="flex p-1 bg-gray-200 dark:bg-gray-800">
-        {panels.map(panel => (
-          <button
-            key={panel.id}
-            onClick={() => setActivePanelId(panel.id)}
-            className={`flex items-center px-2 py-1 rounded-md text-xs mr-1 transition-colors ${
-              activePanelId === panel.id 
-                ? 'bg-blue-500 text-white' 
-                : 'hover:bg-gray-300 dark:hover:bg-gray-700'
-            }`}
-          >
-            <span className="mr-1">{panel.icon}</span>
-            <span>{panel.title}</span>
-          </button>
-        ))}
-      </div>
-      <div className="flex-1 overflow-auto">
-        {panels.map(panel => (
-          activePanelId === panel.id && (
-            <div key={panel.id} className="h-full">
-              {panel.component({ context })}
-            </div>
-          )
-        ))}
-      </div>
+      {panels.length === 0 ? (
+        <div className="p-2 text-xs text-gray-500 text-center">
+          暂无可用插件面板
+        </div>
+      ) : (
+        <>        
+          <div className="flex p-1 bg-gray-200 dark:bg-gray-800">
+            {panels.map(panel => (
+              <button
+                key={panel.id}
+                onClick={() => setActivePanelId(panel.id)}
+                className={`flex items-center px-2 py-1 rounded-md text-xs mr-1 transition-colors ${
+                  activePanelId === panel.id 
+                    ? 'bg-blue-500 text-white' 
+                    : 'hover:bg-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="mr-1">{panel.icon}</span>
+                <span>{panel.title}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex-1 overflow-auto">
+            {activePanelId && (
+              panels.map(panel => (
+                activePanelId === panel.id && (
+                  <div key={panel.id} className="h-full">
+                    {panel.component({ context })}
+                  </div>
+                )
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

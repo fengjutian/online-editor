@@ -1,7 +1,7 @@
 import React from 'react';
-import axios from 'axios'; // 添加axios导入
+import axios from 'axios';
 import { EditorPlugin, EditorContext } from '../types';
-import EventBus from '../core/EventBus';
+import EventBus from '../core/EventBus'; // Add missing EventBus import
 import OpenVSXMarketplacePanel from './OpenVSXMarketplacePanel';
 import PluginDetailModal from './PluginDetailModal';
 

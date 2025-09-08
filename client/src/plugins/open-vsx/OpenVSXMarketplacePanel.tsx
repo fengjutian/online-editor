@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // 添加 React 和 hooks 导入
+import React, { useState, useEffect } from 'react'; // Add missing imports
 import OpenVSXPlugin from './index';
 import PluginDetailModal from './PluginDetailModal';
 
@@ -7,6 +7,7 @@ interface OpenVSXMarketplacePanelProps {
 }
 
 const OpenVSXMarketplacePanel: React.FC<OpenVSXMarketplacePanelProps> = ({ context }) => {
+  // Keep all existing hooks - just ensure proper imports
   const [searchQuery, setSearchQuery] = useState('');
   const [plugins, setPlugins] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

@@ -21,6 +21,7 @@ const ExampleStatusBarItem: React.FC<{ context: EditorContext }> = ({ context })
 };
 
 // 示例插件定义
+// 确保ExamplePlugin的contributions正确设置
 const ExamplePlugin: EditorPlugin = {
   metadata: {
     id: 'example-plugin',

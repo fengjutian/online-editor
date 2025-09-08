@@ -1,43 +1,47 @@
-// 事件总线实现
 class EventBus {
-  private events: Map<string, Set<Function>> = new Map();
+  private static instance: EventBus;
+  private events: Map<string, Array<(data?: any) => void>> = new Map();
 
-  // 订阅事件
-  on(event: string, callback: Function): void {
+  private constructor() {}
+
+  static getInstance(): EventBus {
+    if (!EventBus.instance) {
+      EventBus.instance = new EventBus();
+    }
+    return EventBus.instance;
+  }
+
+  on(event: string, callback: (data?: any) => void): void {
     if (!this.events.has(event)) {
-      this.events.set(event, new Set());
+      this.events.set(event, []);
     }
-    this.events.get(event)!.add(callback);
+    this.events.get(event)?.push(callback);
   }
 
-  // 取消订阅
-  off(event: string, callback: Function): void {
-    if (this.events.has(event)) {
-      this.events.get(event)!.delete(callback);
-      if (this.events.get(event)!.size === 0) {
-        this.events.delete(event);
+  emit(event: string, data?: any): void {
+    const callbacks = this.events.get(event);
+    if (callbacks) {
+      callbacks.forEach(callback => callback(data));
+    }
+    
+    // 触发window事件，以便全局监听
+    const customEvent = new CustomEvent(event, { detail: data });
+    window.dispatchEvent(customEvent);
+  }
+
+  off(event: string, callback?: (data?: any) => void): void {
+    if (!this.events.has(event)) return;
+    
+    if (callback) {
+      const callbacks = this.events.get(event);
+      if (callbacks) {
+        this.events.set(event, callbacks.filter(cb => cb !== callback));
       }
+    } else {
+      this.events.delete(event);
     }
-  }
-
-  // 触发事件
-  emit(event: string, ...args: any[]): void {
-    if (this.events.has(event)) {
-      this.events.get(event)!.forEach(callback => {
-        try {
-          callback(...args);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
-      });
-    }
-  }
-
-  // 清空所有事件
-  clear(): void {
-    this.events.clear();
   }
 }
 
 // 导出单例
-export default new EventBus();
+export default EventBus.getInstance();
