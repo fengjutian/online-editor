@@ -1,25 +1,32 @@
-# Online Code Editor (多语言 Docker 沙箱)
+# Online Code Editor - 多语言Docker沙箱在线编辑器
 
-一个基于Docker的安全多语言在线代码编辑器，支持JavaScript、Python和Java代码的实时编写与执行。
+## 📖 项目简介
+一个基于Docker容器技术的安全多语言在线代码编辑器，为开发者提供JavaScript、Python和Java代码的实时编写与执行环境。项目采用前后端分离架构，通过Docker容器实现代码的安全隔离执行，确保主机环境不受影响。
 
-## 🚀 项目特点
+## ✨ 核心特性
 
-- **多语言支持**：内置支持JavaScript (Node.js)、Python和Java三种主流编程语言
-- **Docker沙箱隔离**：所有代码在Docker容器中安全执行，完全隔离主机环境，杜绝安全风险
-- **Monaco Editor集成**：采用VS Code同款编辑器，提供专业的代码编辑体验、语法高亮和自动补全
-- **实时执行反馈**：代码执行结果通过弹窗实时展示，方便调试
-- **轻量级架构**：前后端分离设计，部署简单，易于扩展
+- **🔧 多语言支持**：内置支持JavaScript (Node.js)、Python和Java三种主流编程语言
+- **🛡️ Docker沙箱隔离**：所有代码在独立Docker容器中安全执行，完全隔离主机环境，杜绝安全风险
+- **💻 专业编辑器体验**：集成Monaco Editor（VS Code同款编辑器），提供专业的代码编辑体验、语法高亮、自动补全和错误提示
+- **⚡ 实时执行反馈**：代码执行结果通过界面实时展示，支持标准输出和错误信息捕获
+- **🏗️ 插件扩展系统**：支持通过插件机制扩展编辑器功能，已集成OpenVSX插件市场
+- **📁 文件系统**：支持文件树结构管理，便于多文件项目的开发和组织
+- **🎨 现代化界面**：采用现代化UI设计，支持明暗主题切换
+- **🚀 轻量级架构**：前后端分离设计，部署简单，易于扩展
 
 ## 🛠️ 技术栈
 
 ### 前端
 - React 18
 - Monaco Editor (@monaco-editor/react)
+- TypeScript
+- Tailwind CSS
 - React Scripts
 
 ### 后端
 - Node.js + Express
 - Docker API集成
+- 多语言运行时环境（Node.js 18、Python 3.11、OpenJDK 17）
 
 ## 📁 项目结构
 
