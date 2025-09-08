@@ -270,14 +270,17 @@ const StatusBar: React.FC = () => {
 };
 
 // 插件侧边栏面板组件
-const PluginSidebarPanels: React.FC = () => {
+interface PluginSidebarPanelsProps {
+  pluginsLoaded?: boolean;
+}
+
+const PluginSidebarPanels: React.FC<PluginSidebarPanelsProps> = ({ pluginsLoaded = false }) => {
   const [panels, setPanels] = useState<any[]>([]);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const context = React.useContext(AppEditorContext);
   
-  useEffect(() => {
+  const updatePanels = () => {
     try {
-      // 获取插件贡献点
       const contributions = PluginManager.getPluginContributions();
       console.log('Plugin contributions:', contributions);
       
@@ -294,16 +297,30 @@ const PluginSidebarPanels: React.FC = () => {
     } catch (error) {
       console.error('Error fetching plugin contributions:', error);
     }
-  }, []); // 只在组件挂载时运行一次
+  };
+  
+  // 当pluginsLoaded状态变化时，更新面板
+  useEffect(() => {
+    if (pluginsLoaded) {
+      console.log('Plugins loaded, updating panels...');
+      updatePanels();
+    }
+  }, [pluginsLoaded]);
+  
+  // 找到当前激活的面板
+  const activePanel = panels.find(panel => panel.id === activePanelId);
   
   return (
     <div className="border-t flex flex-col">
       {panels.length === 0 ? (
         <div className="p-2 text-xs text-gray-500 text-center">
           暂无可用插件面板
+          <div className="text-blue-500 mt-1 cursor-pointer hover:underline" onClick={updatePanels}>
+            点击刷新
+          </div>
         </div>
       ) : (
-        <>        
+        <>
           <div className="flex p-1 bg-gray-200 dark:bg-gray-800">
             {panels.map(panel => (
               <button
@@ -321,14 +338,16 @@ const PluginSidebarPanels: React.FC = () => {
             ))}
           </div>
           <div className="flex-1 overflow-auto">
-            {activePanelId && (
-              panels.map(panel => (
-                activePanelId === panel.id && (
-                  <div key={panel.id} className="h-full">
-                    {panel.component({ context })}
-                  </div>
-                )
-              ))
+            {/* 使用activePanel变量而不是嵌套的条件渲染 */}
+            {activePanel ? (
+              <div className="h-full">
+                {/* 修复：将函数调用改为JSX组件渲染 */}
+                <activePanel.component context={context} />
+              </div>
+            ) : (
+              <div className="p-2 text-xs text-gray-500 text-center">
+                请选择一个插件面板
+              </div>
             )}
           </div>
         </>
@@ -339,18 +358,20 @@ const PluginSidebarPanels: React.FC = () => {
 
 // 主应用组件
 const App: React.FC = () => {
-  // 状态定义
+  // 状态定义 - 将pluginsLoaded移到这里
   const [files, setFiles] = useState<FileNodeType[]>([
     { id: "1", name: "src", type: "folder", children: [{ id: "2", name: "main.js", type: "file", content: "// JS code" }] },
     { id: "3", name: "README.md", type: "file", content: "# Project" },
   ]);
-
   const [activeFile, setActiveFile] = useState<FileNodeType | null>(null);
   const [language, setLanguage] = useState<string>("javascript");
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [input, setInput] = useState<string>("");
   const [theme, setTheme] = useState<string>("vs-dark");
-
+  
+  // 添加pluginsLoaded状态到组件顶层
+  const [pluginsLoaded, setPluginsLoaded] = useState<boolean>(false);
+  
   const consoleRef = useRef<HTMLDivElement | null>(null);
   const [leftWidth, setLeftWidth] = useState<number>(20);
   const [centerWidth, setCenterWidth] = useState<number>(50);
@@ -367,7 +388,7 @@ const App: React.FC = () => {
     const initializePlugins = async () => {
       try {
         // 创建编辑器上下文
-        const editorContext: EditorContextType = { // 使用类型别名
+        const editorContext: EditorContextType = {
           activeFile, 
           files,
           setActiveFile,
@@ -389,9 +410,13 @@ const App: React.FC = () => {
         // 激活所有插件
         PluginManager.activateAllPlugins();
         
+        // 设置插件已加载的状态
+        setPluginsLoaded(true);
+        
         console.log('Plugins initialized successfully');
       } catch (error) {
         console.error('Failed to initialize plugins:', error);
+        setPluginsLoaded(false); // 出错时也设置状态
       }
     };
     
@@ -600,6 +625,7 @@ const App: React.FC = () => {
         <div className="flex-1 flex relative">
           {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
           <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}>
+            {/* 修复FileExplorerTree组件的props */}
             <FileExplorerTree
               files={files}
               setActiveFile={setActiveFile}
@@ -610,7 +636,7 @@ const App: React.FC = () => {
             />
             
             {/* 插件侧边栏面板容器 */}
-            <PluginSidebarPanels />
+            <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
           </div>
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
@@ -638,4 +664,14 @@ const App: React.FC = () => {
   );
 };
 
+// 删除组件外部的useEffect钩子
+// 修复：将这个钩子移到App组件内部，或者完全删除它
+
+// 通知功能已经通过props传递给PluginSidebarPanels组件
+// 因此这个额外的useEffect钩子是多余的
+
+// 只保留export语句
+
 export default App;
+
+
