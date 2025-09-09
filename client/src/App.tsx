@@ -39,8 +39,9 @@ interface SubMenuProps {
   y: number;
 }
 
+// 找到AppEditorContext定义的地方（第44行附近）
 // 创建全局上下文以在组件间共享编辑器状态
-const AppEditorContext = React.createContext<any>(null);
+export const AppEditorContext = React.createContext<any>(null);
 
 // 子菜单组件
 const SubMenu: React.FC<SubMenuProps> = ({ items, onClose, x, y }) => {
