@@ -1,32 +1,76 @@
-# Online Code Editor - 多语言Docker沙箱在线编辑器
+# Online Editor - 安全多语言在线代码编辑器
+
+<div align="center">
+  <img src="https://img.shields.io/badge/React-18-blue?style=flat-square&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/Monaco%20Editor-VSCode%20Style-blue?style=flat-square&logo=visual-studio-code" alt="Monaco Editor">
+  <img src="https://img.shields.io/badge/Docker-Sandboxed%20Execution-blue?style=flat-square&logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/TypeScript-Type%20Safe-blue?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Node.js-18-green?style=flat-square&logo=node.js" alt="Node.js">
+  <img src="https://img.shields.io/badge/Python-3.11-green?style=flat-square&logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/Java-17-red?style=flat-square&logo=java" alt="Java">
+</div>
 
 ## 📖 项目简介
-一个基于Docker容器技术的安全多语言在线代码编辑器，为开发者提供JavaScript、Python和Java代码的实时编写与执行环境。项目采用前后端分离架构，通过Docker容器实现代码的安全隔离执行，确保主机环境不受影响。
+
+Online Editor 是一个基于Docker容器技术的安全多语言在线代码编辑器平台，为开发者提供JavaScript、Python和Java代码的实时编写与执行环境。项目采用前后端分离架构，通过Docker容器实现代码的安全隔离执行，确保主机环境不受影响。
+
+## 🎯 设计理念
+
+我们的目标是创建一个安全、高效、易用的在线编程环境，让开发者可以随时随地编写、测试和运行代码，而无需担心环境配置和安全问题。
 
 ## ✨ 核心特性
 
-- **🔧 多语言支持**：内置支持JavaScript (Node.js)、Python和Java三种主流编程语言
-- **🛡️ Docker沙箱隔离**：所有代码在独立Docker容器中安全执行，完全隔离主机环境，杜绝安全风险
-- **💻 专业编辑器体验**：集成Monaco Editor（VS Code同款编辑器），提供专业的代码编辑体验、语法高亮、自动补全和错误提示
-- **⚡ 实时执行反馈**：代码执行结果通过界面实时展示，支持标准输出和错误信息捕获
-- **🏗️ 插件扩展系统**：支持通过插件机制扩展编辑器功能，已集成OpenVSX插件市场
-- **📁 文件系统**：支持文件树结构管理，便于多文件项目的开发和组织
-- **🎨 现代化界面**：采用现代化UI设计，支持明暗主题切换
-- **🚀 轻量级架构**：前后端分离设计，部署简单，易于扩展
+### 🔧 多语言支持
+- 内置支持JavaScript (Node.js 18)、Python 3.11和Java 17三种主流编程语言
+- 每种语言都在独立的Docker容器中运行，确保运行环境的纯净性和稳定性
+
+### 🛡️ Docker沙箱隔离
+- 所有代码在独立Docker容器中安全执行，完全隔离主机环境，杜绝安全风险
+- 代码执行设置超时限制，防止恶意代码耗尽系统资源
+- 执行完成后自动清理临时文件和容器，保护用户数据隐私
+
+### 💻 专业编辑器体验
+- 集成Monaco Editor（VS Code同款编辑器核心）
+- 提供语法高亮、代码补全、括号匹配、错误提示等专业级编辑功能
+- 支持代码折叠、多光标编辑、查找替换等高级编辑功能
+- 支持明暗主题切换，提升开发体验
+
+### 📊 实时执行与反馈
+- 代码执行结果实时展示，支持标准输出和错误信息捕获
+- 交互式终端支持，可输入命令并查看响应
+- 多文件项目支持，便于组织和管理代码
+
+### 🏗️ 插件扩展系统
+- 内置插件机制，支持功能扩展和定制
+- 集成OpenVSX插件市场，可安装丰富的VS Code兼容插件
+- 支持自定义状态栏、侧边栏和命令面板贡献
+
+### 📱 现代化界面设计
+- 仿照VS Code的界面布局，包括菜单栏、活动栏、编辑区和状态栏
+- 完全响应式设计，适应不同屏幕尺寸
+- 支持自定义布局调整，拖拽改变面板大小
+
+### 🔄 工作区管理
+- 文件系统树结构，支持文件和文件夹的创建、删除、重命名
+- 支持代码文件的保存和恢复
+- 多文件项目的组织和管理
 
 ## 🛠️ 技术栈
 
-### 前端
-- React 18
-- Monaco Editor (@monaco-editor/react)
-- TypeScript
-- Tailwind CSS
-- React Scripts
+### 前端技术
+- **框架**: React 18 + TypeScript
+- **编辑器核心**: Monaco Editor (@monaco-editor/react)
+- **样式框架**: Tailwind CSS
+- **构建工具**: React Scripts
+- **终端模拟**: xterm.js
+- **其他库**: React Context API (状态管理)
 
-### 后端
-- Node.js + Express
-- Docker API集成
-- 多语言运行时环境（Node.js 18、Python 3.11、OpenJDK 17）
+### 后端技术
+- **服务器**: Node.js + Express
+- **容器化**: Docker API 集成
+- **运行环境**: Node.js 18、Python 3.11、OpenJDK 17
+- **文件系统**: 临时文件管理和清理
+- **网络**: RESTful API设计
 
 ## 📁 项目结构
 
