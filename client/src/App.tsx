@@ -418,8 +418,6 @@ const App: React.FC = () => {
 
   // 运行代码
   const runCode = async (runInput?: string) => {
-    console.log(1234, runInput)
-
     if (!activeFile) return;
     
     // 优先使用runInput，如果没有则使用activeFile.content
@@ -499,14 +497,11 @@ const App: React.FC = () => {
   // 处理菜单点击
   const handleMenuClick = (menu: MenuItem, e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // 阻止事件冒泡
     const rect = menuBarRef.current?.getBoundingClientRect();
     if (rect) {
-      const menuIndex = menuBar.findIndex(m => m.id === menu.id);
-      let x = 0;
-      for (let i = 0; i < menuIndex; i++) {
-        const menuItem = document.getElementById(`menu-${menuBar[i].id}`);
-        if (menuItem) x += menuItem.offsetWidth;
-      }
+      const menuElement = document.getElementById(`menu-${menu.id}`);
+      const x = menuElement ? menuElement.offsetLeft : 0;
       setMenuPos({ x, y: rect.height });
       setShowMenu(menu.id);
     }
@@ -573,11 +568,9 @@ const App: React.FC = () => {
           <button 
             onClick={() => {
               if (input.trim() !== "") {
-                console.log('Running terminal input code');
                 runCode(input);
                 setInput("");
               } else {
-                console.log('Running editor code');
                 runCode();
               }
             }} 
