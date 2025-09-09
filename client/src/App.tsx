@@ -15,8 +15,121 @@ import { EditorContext as EditorContextType } from './plugins/types';
 // 导入类型
 import { FileNodeType, ConsoleLog } from './types';
 
+// 定义菜单相关类型
+interface MenuItem {
+  id: string;
+  label: string;
+  shortcut?: string;
+  onClick?: () => void;
+  children?: MenuItem[];
+  enabled?: boolean;
+}
+
+interface MenuProps {
+  menu: MenuItem;
+  onClose: () => void;
+  x: number;
+  y: number;
+}
+
+interface SubMenuProps {
+  items: MenuItem[];
+  onClose: () => void;
+  x: number;
+  y: number;
+}
+
 // 创建全局上下文以在组件间共享编辑器状态
 const AppEditorContext = React.createContext<any>(null);
+
+// 子菜单组件
+const SubMenu: React.FC<SubMenuProps> = ({ items, onClose, x, y }) => {
+  return (
+    <div 
+      className="absolute bg-white dark:bg-gray-800 shadow-lg rounded border border-gray-200 dark:border-gray-700 py-1 min-w-[180px]"
+      style={{ left: x, top: y, zIndex: 1000 }}
+    >
+      {items.map((item) => {
+        const isDisabled = item.enabled === false;
+        
+        return (
+          <div
+            key={item.id}
+            className={`px-4 py-2 flex items-center justify-between cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => {
+              if (!isDisabled) {
+                if (item.onClick) item.onClick();
+                onClose();
+              }
+            }}
+          >
+            <span>{item.label}</span>
+            {item.shortcut && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">{item.shortcut}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// 菜单组件
+const Menu: React.FC<MenuProps> = ({ menu, onClose, x, y }) => {
+  const [showSubMenu, setShowSubMenu] = useState<string | null>(null);
+  const [subMenuPos, setSubMenuPos] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (item: MenuItem, index: number) => {
+    if (item.children && item.children.length > 0) {
+      setSubMenuPos({ x: x + 180, y: y + index * 28 });
+      setShowSubMenu(item.id);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div 
+        className="absolute bg-white dark:bg-gray-800 shadow-lg rounded border border-gray-200 dark:border-gray-700 py-1 min-w-[180px]"
+        style={{ left: x, top: y, zIndex: 1000 }}
+      >
+        {menu.children?.map((item, index) => {
+          const isDisabled = item.enabled === false;
+          
+          return (
+            <div
+              key={item.id}
+              className={`px-4 py-2 flex items-center justify-between cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => {
+                if (!isDisabled && !item.children) {
+                  if (item.onClick) item.onClick();
+                  onClose();
+                }
+              }}
+              onMouseEnter={() => handleMouseEnter(item, index)}
+            >
+              <span>{item.label}</span>
+              {item.shortcut && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">{item.shortcut}</span>
+              )}
+              {item.children && (
+                <span className="text-gray-500 dark:text-gray-400">→</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      {showSubMenu && (
+        <SubMenu 
+          items={menu.children?.find(i => i.id === showSubMenu)?.children || []}
+          onClose={onClose}
+          x={subMenuPos.x}
+          y={subMenuPos.y}
+        />
+      )}
+    </div>
+  );
+};
 
 // 主应用组件
 const App: React.FC = () => {
@@ -30,6 +143,8 @@ const App: React.FC = () => {
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [input, setInput] = useState<string>("");
   const [theme, setTheme] = useState<string>("vs-dark");
+  const [showMenu, setShowMenu] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   
   // 添加pluginsLoaded状态
   const [pluginsLoaded, setPluginsLoaded] = useState<boolean>(false);
@@ -38,6 +153,149 @@ const App: React.FC = () => {
   const [centerWidth, setCenterWidth] = useState<number>(50);
   const [rightWidth, setRightWidth] = useState<number>(30);
   const dragInfo = useRef<{ dragging: boolean; bar: "left" | "center" | null }>({ dragging: false, bar: null });
+  const menuBarRef = useRef<HTMLDivElement>(null);
+
+  // 定义菜单栏
+  const menuBar: MenuItem[] = [
+    {
+      id: "file",
+      label: "文件",
+      children: [
+        {
+          id: "new-file",
+          label: "新建文件",
+          shortcut: "Ctrl+N",
+          onClick: () => {
+            const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
+            if (rootFolder) {
+              addNode(rootFolder, "file");
+            }
+          }
+        },
+        {
+          id: "new-folder",
+          label: "新建文件夹",
+          shortcut: "Ctrl+Shift+N",
+          onClick: () => {
+            const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
+            if (rootFolder) {
+              addNode(rootFolder, "folder");
+            }
+          }
+        },
+        {
+          id: "separator-1",
+          label: "--------",
+          enabled: false
+        },
+        {
+          id: "run-code",
+          label: "运行代码",
+          shortcut: "F5",
+          onClick: () => runCode(),
+          enabled: !!activeFile
+        },
+        {
+          id: "clear-console",
+          label: "清空控制台",
+          shortcut: "Ctrl+L",
+          onClick: () => clearConsole()
+        }
+      ]
+    },
+    {
+      id: "edit",
+      label: "编辑",
+      children: [
+        {
+          id: "undo",
+          label: "撤销",
+          shortcut: "Ctrl+Z"
+        },
+        {
+          id: "redo",
+          label: "重做",
+          shortcut: "Ctrl+Y"
+        },
+        {
+          id: "separator-2",
+          label: "--------",
+          enabled: false
+        },
+        {
+          id: "cut",
+          label: "剪切",
+          shortcut: "Ctrl+X"
+        },
+        {
+          id: "copy",
+          label: "复制",
+          shortcut: "Ctrl+C"
+        },
+        {
+          id: "paste",
+          label: "粘贴",
+          shortcut: "Ctrl+V"
+        }
+      ]
+    },
+    {
+      id: "view",
+      label: "视图",
+      children: [
+        {
+          id: "theme-light",
+          label: "亮色主题",
+          onClick: () => setTheme("vs")
+        },
+        {
+          id: "theme-dark",
+          label: "暗色主题",
+          onClick: () => setTheme("vs-dark")
+        },
+        {
+          id: "theme-custom",
+          label: "自定义暗色",
+          onClick: () => setTheme("vscode-dark")
+        }
+      ]
+    },
+    {
+      id: "language",
+      label: "语言",
+      children: [
+        {
+          id: "lang-js",
+          label: "JavaScript",
+          onClick: () => setLanguage("javascript")
+        },
+        {
+          id: "lang-python",
+          label: "Python",
+          onClick: () => setLanguage("python")
+        },
+        {
+          id: "lang-java",
+          label: "Java",
+          onClick: () => setLanguage("java")
+        }
+      ]
+    },
+    {
+      id: "help",
+      label: "帮助",
+      children: [
+        {
+          id: "about",
+          label: "关于"
+        },
+        {
+          id: "documentation",
+          label: "文档"
+        }
+      ]
+    }
+  ];
 
   // 添加缺失的addConsoleLog函数
   const addConsoleLog = (log: ConsoleLog) => {
@@ -238,11 +496,67 @@ const App: React.FC = () => {
     setTheme
   };
 
+  // 处理菜单点击
+  const handleMenuClick = (menu: MenuItem, e: React.MouseEvent) => {
+    e.preventDefault();
+    const rect = menuBarRef.current?.getBoundingClientRect();
+    if (rect) {
+      const menuIndex = menuBar.findIndex(m => m.id === menu.id);
+      let x = 0;
+      for (let i = 0; i < menuIndex; i++) {
+        const menuItem = document.getElementById(`menu-${menuBar[i].id}`);
+        if (menuItem) x += menuItem.offsetWidth;
+      }
+      setMenuPos({ x, y: rect.height });
+      setShowMenu(menu.id);
+    }
+  };
+
+  // 处理文档点击关闭菜单
+  useEffect(() => {
+    const handleDocumentClick = () => {
+      setShowMenu(null);
+    };
+
+    if (showMenu) {
+      document.addEventListener('click', handleDocumentClick);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [showMenu]);
+
   return (
     <AppEditorContext.Provider value={contextValue}>
-      <div className="h-screen w-screen flex flex-col" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
+      <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
+        {/* VSCode风格菜单栏 */}
+        <div className="flex bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8" ref={menuBarRef}>
+          {menuBar.map((menu) => (
+            <div
+              key={menu.id}
+              id={`menu-${menu.id}`}
+              className="px-4 py-1 flex items-center text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={(e) => handleMenuClick(menu, e)}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {menu.label}
+            </div>
+          ))}
+        </div>
+
+        {/* 显示菜单 */}
+        {showMenu && (
+          <Menu
+            menu={menuBar.find(m => m.id === showMenu) || menuBar[0]}
+            onClose={() => setShowMenu(null)}
+            x={menuPos.x}
+            y={menuPos.y}
+          />
+        )}
+
         {/* 工具栏 */}
-        <div className="p-2 bg-gray-100 flex gap-2 items-center">
+        <div className="p-2 bg-gray-100 dark:bg-gray-800 flex gap-2 items-center border-b border-gray-200 dark:border-gray-700">
           <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
