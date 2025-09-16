@@ -26,7 +26,7 @@ class PluginLoader {
   // 加载单个插件
   private async loadPlugin(pluginName: string): Promise<EditorPlugin | null> {
     try {
-      const module = await import(`../${pluginName}/index.ts`);
+      const module = await import(`../${pluginName}/index`);
       const plugin = module.default;
       
       if (plugin && typeof plugin === 'object' && plugin.metadata && plugin.activate && plugin.deactivate) {
