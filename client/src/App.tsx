@@ -15,7 +15,6 @@ import { EditorContext as EditorContextType } from './plugins/types';
 // 导入类型
 import { FileNodeType, ConsoleLog } from './types';
 import { vscodeDarkTheme, MenuItemGenerator } from './schema';
-
 import Menu from './components/Menu';
 
 
@@ -213,10 +212,6 @@ const App: React.FC = () => {
     setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
   };
 
-
-
-
-  
   // 拖拽相关函数
   const startDrag = (bar: "left" | "center") => { dragInfo.current = { dragging: true, bar }; };
   const stopDrag = () => { dragInfo.current.dragging = false; };
@@ -280,6 +275,39 @@ const App: React.FC = () => {
       document.removeEventListener('click', handleDocumentClick);
     };
   }, [showMenu]);
+
+  // 添加编辑器引用
+  const editorRef = useRef<any>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 添加窗口大小变化处理
+  useEffect(() => {
+    const handleResize = () => {
+      // 清除之前的定时器
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // 使用防抖处理，避免频繁更新
+      resizeTimeoutRef.current = setTimeout(() => {
+        // 手动触发编辑器布局更新
+        if (editorRef.current) {
+          editorRef.current.layout();
+        }
+      }, 100);
+    };
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', handleResize);
+    
+    // 组件卸载时清理
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <AppEditorContext.Provider value={contextValue}>
@@ -356,8 +384,8 @@ const App: React.FC = () => {
           </div>
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
-          {/* 中间编辑器 */}
-          <div style={{ width: `${centerWidth}%`, height: '100%' }}>
+          {/* 中间编辑器 - 添加ref属性和改进样式 */}
+          <div style={{ width: `${centerWidth}%`, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Editor
               height="100%"
               theme={theme}
@@ -370,6 +398,10 @@ const App: React.FC = () => {
               }}
               value={activeFile?.content || ""}
               onChange={(val) => activeFile && setFileContent(activeFile, val || "")}
+              // 添加ref回调函数
+              onMount={(editor) => {
+                editorRef.current = editor;
+              }}
             />
           </div>
           <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
