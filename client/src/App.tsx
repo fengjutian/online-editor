@@ -192,10 +192,8 @@ const App: React.FC = () => {
         
         // 加载插件
         await PluginLoader.loadPluginsFromDirectory();
-        
         // 激活所有插件
         PluginManager.activateAllPlugins();
-        
         // 设置插件已加载的状态
         setPluginsLoaded(true);
         
