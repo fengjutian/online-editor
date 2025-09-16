@@ -271,6 +271,45 @@ export default function WelcomePage({ setFiles, setActiveFile }: WelcomePageProp
     setIsDragging(false);
   };
 
+  // 处理文件夹选择
+  const handleFolderSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadStatus('uploading');
+
+    try {
+      // 检查浏览器是否支持webkitGetAsEntry
+      if (window.DataTransferItem && 'webkitGetAsEntry' in DataTransferItem.prototype) {
+        // 创建一个虚拟的DataTransferItemList
+        const dataTransfer = new DataTransfer();
+        for (let i = 0; i < files.length; i++) {
+          dataTransfer.items.add(files[i]);
+        }
+
+        // 使用现有的processItems函数处理文件夹
+        const uploadedFiles = await processItems(dataTransfer.items);
+        setFiles((prev) => [...prev, ...uploadedFiles]);
+      } else {
+        // 降级处理：只处理文件夹中的文件
+        const promises = [];
+        for (let i = 0; i < files.length; i++) {
+          promises.push(handleSingleFileUpload(files[i]));
+        }
+        await Promise.all(promises);
+      }
+
+      setUploadStatus('success');
+      // 3秒后重置状态
+      setTimeout(() => setUploadStatus('idle'), 3000);
+    } catch (error) {
+      console.error('上传文件夹失败:', error);
+      setUploadStatus('error');
+      // 3秒后重置状态
+      setTimeout(() => setUploadStatus('idle'), 3000);
+    }
+  };
+
   return (
     <div 
       className="flex items-center justify-center h-full bg-[#1E1E1E] text-gray-300 p-8"
@@ -315,14 +354,27 @@ export default function WelcomePage({ setFiles, setActiveFile }: WelcomePageProp
             )}
           </div>
           
-          <label className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded cursor-pointer transition-colors">
-            <span>选择文件</span>
-            <input 
-              type="file" 
-              className="hidden" 
-              onChange={handleFileUpload} 
-            />
-          </label>
+          <div className="flex gap-3">
+            <label className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded cursor-pointer transition-colors">
+              <span>选择文件</span>
+              <input 
+                type="file" 
+                className="hidden" 
+                onChange={handleFileUpload} 
+              />
+            </label>
+            
+            <label className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded cursor-pointer transition-colors">
+              <span>选择文件夹</span>
+              <input 
+                type="file" 
+                // @ts-ignore
+                webkitdirectory=""
+                className="hidden" 
+                onChange={handleFolderSelect} 
+              />
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-left">
