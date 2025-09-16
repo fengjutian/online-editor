@@ -127,6 +127,9 @@ const App: React.FC = () => {
   // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
 
+  // 删除或注释掉多余的visible状态和相关函数
+  // 这些不再需要，因为我们直接使用activeSidebarPanel控制Modal显示
+  /*
   const [visible, setVisible] = useState(false);
   const showDialog = () => {
       setVisible(true);
@@ -142,6 +145,7 @@ const App: React.FC = () => {
   const handleAfterClose = () => {
       console.log('After Close callback executed');
   };
+  */
 
 // 在组件内部使用useMemo确保sidebarPanels在files状态变化时重新计算
 const sidebarPanels = useMemo(() => [
@@ -171,12 +175,17 @@ const sidebarPanels = useMemo(() => [
     visible: activeSidebarPanel === 'extensions',
     component: (
       <Modal
-          title="基本对话框"
+          title="扩展" // 修改标题为更合适的名称
           visible={activeSidebarPanel === 'extensions'}
-          onOk={handleOk}
-          afterClose={handleAfterClose}
-          onCancel={handleCancel}
+          onOk={() => setActiveSidebarPanel('explorer')} // 修改为设置回默认面板
+          afterClose={() => console.log('扩展面板已关闭')}
+          onCancel={() => setActiveSidebarPanel('explorer')} // 修改为设置回默认面板
           closeOnEsc={true}
+          style={{
+            width: '90%',
+            maxWidth: '1200px',
+            maxHeight: '90vh'
+          }} // 确保Modal有合适的尺寸
       >
         <div className="p-4">
           <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
