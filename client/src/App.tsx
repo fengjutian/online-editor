@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Editor, { loader } from "@monaco-editor/react";
 
 // 导入组件
@@ -88,7 +88,11 @@ const App: React.FC = () => {
       content: type === "file" ? "" : undefined,
       children: type === "folder" ? [] : undefined,
     };
+
+    
     setFiles((prev) => updateTree(prev, parent, (n) => ({ ...n, children: [...(n.children || []), newNode] })));
+
+    console.log("addNode", parent, newNode, files)
   };
 
     // 运行代码
@@ -117,14 +121,48 @@ const App: React.FC = () => {
   // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
 
-  const [sidebarPanels, setSidebarPanels] = useState<{
-  id: string;
-  visible: boolean;
-  component: React.ReactNode;
-}[]>([
+//   const [sidebarPanels, setSidebarPanels] = useState<{
+//   id: string;
+//   visible: boolean;
+//   component: React.ReactNode;
+// }[]>([
+//   {
+//     id: 'explorer',
+//     visible: true,
+//     component: (
+//       <>
+//         <FileExplorerTree
+//           files={files}
+//           setActiveFile={setActiveFile}
+//           addNode={addNode}
+//           deleteNode={deleteNode}
+//           renameNode={renameNode}
+//           activeFile={activeFile}
+//         />
+//       </>
+//     )
+//   },
+//   {
+//     id: 'search',
+//     visible: false,
+//     component: <div className="p-4 text-white">搜索面板</div>
+//   },
+//   {
+//     id: 'extensions',
+//     visible: false,
+//     component: (
+//       <div className="p-4 text-white">
+//         <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
+//       </div>
+//     )
+//   }
+// ]);
+
+// 在组件内部使用useMemo确保sidebarPanels在files状态变化时重新计算
+const sidebarPanels = useMemo(() => [
   {
     id: 'explorer',
-    visible: true,
+    visible: activeSidebarPanel === 'explorer',
     component: (
       <>
         <FileExplorerTree
@@ -140,19 +178,20 @@ const App: React.FC = () => {
   },
   {
     id: 'search',
-    visible: false,
+    visible: activeSidebarPanel === 'search',
     component: <div className="p-4 text-white">搜索面板</div>
   },
   {
     id: 'extensions',
-    visible: false,
+    visible: activeSidebarPanel === 'extensions',
     component: (
       <div className="p-4 text-white">
         <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
       </div>
     )
   }
-]);
+], [files, activeFile, activeSidebarPanel, setActiveFile, addNode, deleteNode, renameNode, pluginsLoaded]);
+
 
   const menuBar: MenuItem[] = MenuItemGenerator(
     files, 
@@ -231,15 +270,17 @@ const App: React.FC = () => {
   }, [activeFile, files, consoleLogs, language, theme]);
 
   // 更新文件树
-  const updateTree = (nodes: FileNodeType[], target: FileNodeType, updater: (n: FileNodeType) => FileNodeType | null): FileNodeType[] =>
-    nodes.flatMap((n) => {
+  const updateTree = (nodes: FileNodeType[], target: FileNodeType, updater: (n: FileNodeType) => FileNodeType | null): FileNodeType[] => {
+    console.log('nodes', nodes)
+    return nodes.flatMap((n) => {
       if (n === target) {
         const updated = updater(n);
         return updated ? [updated] : [];
       }
       if (n.type === "folder") return [{ ...n, children: updateTree(n.children || [], target, updater) }];
       return [n];
-    });
+    })
+  };
 
   // 设置文件内容
   const setFileContent = (file: FileNodeType, content: string) => {
@@ -349,10 +390,10 @@ const App: React.FC = () => {
   // 切换侧边栏面板的处理函数
 const handleSidebarPanelToggle = (panelId: string) => {
   setActiveSidebarPanel(panelId);
-  setSidebarPanels(prev => prev.map(panel => ({
-    ...panel,
-    visible: panel.id === panelId
-  })));
+  // setSidebarPanels(prev => prev.map(panel => ({
+  //   ...panel,
+  //   visible: panel.id === panelId
+  // })));
 };
 
 // 侧边栏图标的SVG组件
@@ -416,19 +457,6 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
 
         {/* 工具栏 */}
         <div className="p-2 bg-gray-100 dark:bg-gray-800 flex gap-2 items-center border-b border-gray-200 dark:border-gray-700">
-          {/* <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-            <option value="javascript">JavaScript</option>
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-          </select> */}
-
-          {/* 主题切换 */}
-          {/* <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-            <option value="vs">Light (VS)</option>
-            <option value="vs-dark">Dark (VS)</option>
-            <option value="vscode-dark">Dark+ (Custom)</option>
-          </select> */}
-
           <button 
             onClick={() => {
               if (input.trim() !== "") {
