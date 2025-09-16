@@ -21,6 +21,7 @@ import Menu from './components/Menu';
 import WelcomePage from './mainPage/WelcomePage';
 
 import Docker from './ui/docker/index';
+import { Modal, Button } from '@douyinfe/semi-ui';
 
 
 // 定义菜单相关类型
@@ -126,6 +127,22 @@ const App: React.FC = () => {
   // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
 
+  const [visible, setVisible] = useState(false);
+  const showDialog = () => {
+      setVisible(true);
+  };
+  const handleOk = () => {
+      setVisible(false);
+      console.log('Ok button clicked');
+  };
+  const handleCancel = () => {
+      setVisible(false);
+      console.log('Cancel button clicked');
+  };
+  const handleAfterClose = () => {
+      console.log('After Close callback executed');
+  };
+
 // 在组件内部使用useMemo确保sidebarPanels在files状态变化时重新计算
 const sidebarPanels = useMemo(() => [
   {
@@ -153,19 +170,29 @@ const sidebarPanels = useMemo(() => [
     id: 'extensions',
     visible: activeSidebarPanel === 'extensions',
     component: (
-      <div className="p-4 text-white">
-        <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
-      </div>
+      <Modal
+          title="基本对话框"
+          visible={true}
+          onOk={handleOk}
+          afterClose={handleAfterClose} //>=1.16.0
+          onCancel={handleCancel}
+          closeOnEsc={true}
+      >
+        <div className="p-4 text-white">
+          <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
+        </div>
+      </Modal>
+   
     )
   }
 ], [files, activeFile, activeSidebarPanel, setActiveFile, addNode, deleteNode, renameNode, pluginsLoaded]);
 
 
   const menuBar: MenuItem[] = MenuItemGenerator(
-    files, 
+    files,
     addNode ,
-    runCode, 
-    activeFile, 
+    runCode,
+    activeFile,
     clearConsole,
     setTheme,
     setLanguage,
@@ -180,7 +207,6 @@ const sidebarPanels = useMemo(() => [
   useEffect(() => {
     const initializePlugins = async () => {
       try {
-        // 创建编辑器上下文
         const editorContext: EditorContextType = {
           activeFile, 
           files,

@@ -304,7 +304,7 @@ export default function WelcomePage({ setFiles, setActiveFile }: WelcomePageProp
       <div className="text-center max-w-md">
         <h1 className="text-3xl font-bold text-white mb-4">AI代码辅助驾驶系统</h1>
         <h2 className="text-2xl font-bold text-white mb-4">行车不规范，亲人两行泪</h2>
-        <p className="mb-6 text-gray-400">从左侧文件资源管理器中选择一个文件开始编辑，或创建新文件。</p>
+        {/* <p className="mb-6 text-gray-400">从左侧文件资源管理器中选择一个文件开始编辑，或创建新文件。</p> */}
         
         {/* 添加文件上传区域 */}
         <div className="mb-8">
