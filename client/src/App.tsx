@@ -419,9 +419,6 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
           />
         )}
 
-        {/* 工具栏 */}
-
-
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
           <div style={{ width: `${60}px`, display: 'flex', flexDirection: 'column' }} className="bg-[#232323] border-r border-gray-700">
