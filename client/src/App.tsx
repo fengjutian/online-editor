@@ -14,6 +14,7 @@ import { EditorContext as EditorContextType } from './plugins/types';
 
 // 导入类型
 import { FileNodeType, ConsoleLog } from './types';
+import { vscodeDarkTheme, MenuItemGenerator } from './schema';
 
 import Menu from './components/Menu';
 
@@ -56,146 +57,194 @@ const App: React.FC = () => {
   const menuBarRef = useRef<HTMLDivElement>(null);
 
   // 定义菜单栏
-  const menuBar: MenuItem[] = [
-    {
-      id: "file",
-      label: "文件",
-      children: [
-        {
-          id: "new-file",
-          label: "新建文件",
-          shortcut: "Ctrl+N",
-          onClick: () => {
-            const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
-            if (rootFolder) {
-              addNode(rootFolder, "file");
-            }
-          }
-        },
-        {
-          id: "new-folder",
-          label: "新建文件夹",
-          shortcut: "Ctrl+Shift+N",
-          onClick: () => {
-            const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
-            if (rootFolder) {
-              addNode(rootFolder, "folder");
-            }
-          }
-        },
-        {
-          id: "separator-1",
-          label: "--------",
-          enabled: false
-        },
-        {
-          id: "run-code",
-          label: "运行代码",
-          shortcut: "F5",
-          onClick: () => runCode(),
-          enabled: !!activeFile
-        },
-        {
-          id: "clear-console",
-          label: "清空控制台",
-          shortcut: "Ctrl+L",
-          onClick: () => clearConsole()
-        }
-      ]
-    },
-    {
-      id: "edit",
-      label: "编辑",
-      children: [
-        {
-          id: "undo",
-          label: "撤销",
-          shortcut: "Ctrl+Z"
-        },
-        {
-          id: "redo",
-          label: "重做",
-          shortcut: "Ctrl+Y"
-        },
-        {
-          id: "separator-2",
-          label: "--------",
-          enabled: false
-        },
-        {
-          id: "cut",
-          label: "剪切",
-          shortcut: "Ctrl+X"
-        },
-        {
-          id: "copy",
-          label: "复制",
-          shortcut: "Ctrl+C"
-        },
-        {
-          id: "paste",
-          label: "粘贴",
-          shortcut: "Ctrl+V"
-        }
-      ]
-    },
-    {
-      id: "view",
-      label: "视图",
-      children: [
-        {
-          id: "theme-light",
-          label: "亮色主题",
-          onClick: () => setTheme("vs")
-        },
-        {
-          id: "theme-dark",
-          label: "暗色主题",
-          onClick: () => setTheme("vs-dark")
-        },
-        {
-          id: "theme-custom",
-          label: "自定义暗色",
-          onClick: () => setTheme("vscode-dark")
-        }
-      ]
-    },
-    {
-      id: "language",
-      label: "语言",
-      children: [
-        {
-          id: "lang-js",
-          label: "JavaScript",
-          onClick: () => setLanguage("javascript")
-        },
-        {
-          id: "lang-python",
-          label: "Python",
-          onClick: () => setLanguage("python")
-        },
-        {
-          id: "lang-java",
-          label: "Java",
-          onClick: () => setLanguage("java")
-        }
-      ]
-    },
-    {
-      id: "help",
-      label: "帮助",
-      children: [
-        {
-          id: "about",
-          label: "关于"
-        },
-        {
-          id: "documentation",
-          label: "文档"
-        }
-      ]
+  // const menuBar: MenuItem[] = [
+  //   {
+  //     id: "file",
+  //     label: "文件",
+  //     children: [
+  //       {
+  //         id: "new-file",
+  //         label: "新建文件",
+  //         shortcut: "Ctrl+N",
+  //         onClick: () => {
+  //           const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
+  //           if (rootFolder) {
+  //             addNode(rootFolder, "file");
+  //           }
+  //         }
+  //       },
+  //       {
+  //         id: "new-folder",
+  //         label: "新建文件夹",
+  //         shortcut: "Ctrl+Shift+N",
+  //         onClick: () => {
+  //           const rootFolder = files.find(f => f.name === "src" && f.type === "folder");
+  //           if (rootFolder) {
+  //             addNode(rootFolder, "folder");
+  //           }
+  //         }
+  //       },
+  //       {
+  //         id: "separator-1",
+  //         label: "--------",
+  //         enabled: false
+  //       },
+  //       {
+  //         id: "run-code",
+  //         label: "运行代码",
+  //         shortcut: "F5",
+  //         onClick: () => runCode(),
+  //         enabled: !!activeFile
+  //       },
+  //       {
+  //         id: "clear-console",
+  //         label: "清空控制台",
+  //         shortcut: "Ctrl+L",
+  //         onClick: () => clearConsole()
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     id: "edit",
+  //     label: "编辑",
+  //     children: [
+  //       {
+  //         id: "undo",
+  //         label: "撤销",
+  //         shortcut: "Ctrl+Z"
+  //       },
+  //       {
+  //         id: "redo",
+  //         label: "重做",
+  //         shortcut: "Ctrl+Y"
+  //       },
+  //       {
+  //         id: "separator-2",
+  //         label: "--------",
+  //         enabled: false
+  //       },
+  //       {
+  //         id: "cut",
+  //         label: "剪切",
+  //         shortcut: "Ctrl+X"
+  //       },
+  //       {
+  //         id: "copy",
+  //         label: "复制",
+  //         shortcut: "Ctrl+C"
+  //       },
+  //       {
+  //         id: "paste",
+  //         label: "粘贴",
+  //         shortcut: "Ctrl+V"
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     id: "view",
+  //     label: "视图",
+  //     children: [
+  //       {
+  //         id: "theme-light",
+  //         label: "亮色主题",
+  //         onClick: () => setTheme("vs")
+  //       },
+  //       {
+  //         id: "theme-dark",
+  //         label: "暗色主题",
+  //         onClick: () => setTheme("vs-dark")
+  //       },
+  //       {
+  //         id: "theme-custom",
+  //         label: "自定义暗色",
+  //         onClick: () => setTheme("vscode-dark")
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     id: "language",
+  //     label: "语言",
+  //     children: [
+  //       {
+  //         id: "lang-js",
+  //         label: "JavaScript",
+  //         onClick: () => setLanguage("javascript")
+  //       },
+  //       {
+  //         id: "lang-python",
+  //         label: "Python",
+  //         onClick: () => setLanguage("python")
+  //       },
+  //       {
+  //         id: "lang-java",
+  //         label: "Java",
+  //         onClick: () => setLanguage("java")
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     id: "help",
+  //     label: "帮助",
+  //     children: [
+  //       {
+  //         id: "about",
+  //         label: "关于"
+  //       },
+  //       {
+  //         id: "documentation",
+  //         label: "文档"
+  //       }
+  //     ]
+  //   }
+  // ];
+
+    // 添加节点
+  const addNode = (parent: FileNodeType, type: "file" | "folder") => {
+    const newNode: FileNodeType = {
+      id: Date.now().toString(),
+      name: type === "file" ? "newFile.js" : "newFolder",
+      type,
+      content: type === "file" ? "" : undefined,
+      children: type === "folder" ? [] : undefined,
+    };
+    setFiles((prev) => updateTree(prev, parent, (n) => ({ ...n, children: [...(n.children || []), newNode] })));
+  };
+
+    // 运行代码
+  const runCode = async (runInput?: string) => {
+    if (!activeFile) return;
+    
+    // 优先使用runInput，如果没有则使用activeFile.content
+    const codeContent = runInput || activeFile.content || "";
+    
+    const payload = { code: codeContent, language };
+    
+    setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
+    try {
+      const res = await fetch("http://localhost:3001/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
+    } catch {
+      setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
     }
-  ];
+  };
+
+  // 清除控制台
+  const clearConsole = () => setConsoleLogs([]);
+
+  const menuBar: MenuItem[] = MenuItemGenerator(
+    files, 
+    addNode ,
+    runCode, 
+    activeFile, 
+    clearConsole,
+    setTheme,
+    setLanguage,
+  );
 
   // 添加缺失的addConsoleLog函数
   const addConsoleLog = (log: ConsoleLog) => {
@@ -284,17 +333,7 @@ const App: React.FC = () => {
     }
   };
 
-  // 添加节点
-  const addNode = (parent: FileNodeType, type: "file" | "folder") => {
-    const newNode: FileNodeType = {
-      id: Date.now().toString(),
-      name: type === "file" ? "newFile.js" : "newFolder",
-      type,
-      content: type === "file" ? "" : undefined,
-      children: type === "folder" ? [] : undefined,
-    };
-    setFiles((prev) => updateTree(prev, parent, (n) => ({ ...n, children: [...(n.children || []), newNode] })));
-  };
+
 
   // 删除节点
   const deleteNode = (node: FileNodeType) => {
@@ -316,31 +355,9 @@ const App: React.FC = () => {
     setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
   };
 
-  // 运行代码
-  const runCode = async (runInput?: string) => {
-    if (!activeFile) return;
-    
-    // 优先使用runInput，如果没有则使用activeFile.content
-    const codeContent = runInput || activeFile.content || "";
-    
-    const payload = { code: codeContent, language };
-    
-    setConsoleLogs((prev) => [...prev, { type: "info", text: runInput ? `> ${runInput}` : `⏳ Running ${language} code...` }]);
-    try {
-      const res = await fetch("http://localhost:3001/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      setConsoleLogs((prev) => [...prev, { type: data.error ? "error" : "stdout", text: data.output || data.error || "No output" }]);
-    } catch {
-      setConsoleLogs((prev) => [...prev, { type: "error", text: "❌ Error connecting to server" }]);
-    }
-  };
 
-  // 清除控制台
-  const clearConsole = () => setConsoleLogs([]);
+
+
   
   // 拖拽相关函数
   const startDrag = (bar: "left" | "center") => { dragInfo.current = { dragging: true, bar }; };
@@ -360,23 +377,7 @@ const App: React.FC = () => {
   // Monaco编辑器主题初始化
   useEffect(() => {
     loader.init().then((monaco) => {
-      monaco.editor.defineTheme("vscode-dark", {
-        base: "vs-dark",
-        inherit: true,
-        rules: [
-          { token: "comment", foreground: "6A9955" },
-          { token: "string", foreground: "CE9178" },
-          { token: "keyword", foreground: "569CD6" },
-          { token: "number", foreground: "B5CEA8" },
-        ],
-        colors: {
-          "editor.background": "#1E1E1E",
-          "editor.foreground": "#D4D4D4",
-          "editorLineNumber.foreground": "#858585",
-          "editorLineNumber.activeForeground": "#C6C6C6",
-          "editorCursor.foreground": "#AEAFAD",
-        },
-      });
+      monaco.editor.defineTheme("vscode-dark", vscodeDarkTheme);
     });
   }, []);
 
@@ -425,8 +426,7 @@ const App: React.FC = () => {
   return (
     <AppEditorContext.Provider value={contextValue}>
       <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
-        {/* VSCode风格菜单栏 */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8" ref={menuBarRef}>
+        <div className="flex bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8 bg-[#232a35] bg-opacity-100 text-white" ref={menuBarRef}>
           {menuBar.map((menu) => (
             <div
               key={menu.id}
