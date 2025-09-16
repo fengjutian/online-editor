@@ -482,7 +482,7 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
                     editorRef.current = editor;
                   }}
                 />
-              ) : <WelcomePage />
+              ) : <WelcomePage setFiles={setFiles} setActiveFile={setActiveFile} />
            }
           </div>
           <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
