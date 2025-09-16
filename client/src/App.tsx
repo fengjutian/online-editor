@@ -172,17 +172,16 @@ const sidebarPanels = useMemo(() => [
     component: (
       <Modal
           title="基本对话框"
-          visible={true}
+          visible={activeSidebarPanel === 'extensions'}
           onOk={handleOk}
-          afterClose={handleAfterClose} //>=1.16.0
+          afterClose={handleAfterClose}
           onCancel={handleCancel}
           closeOnEsc={true}
       >
-        <div className="p-4 text-white">
+        <div className="p-4">
           <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
         </div>
       </Modal>
-   
     )
   }
 ], [files, activeFile, activeSidebarPanel, setActiveFile, addNode, deleteNode, renameNode, pluginsLoaded]);
