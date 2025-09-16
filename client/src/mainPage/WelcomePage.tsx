@@ -275,30 +275,17 @@ export default function WelcomePage({ setFiles, setActiveFile }: WelcomePageProp
   const handleFolderSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-
+  
     setUploadStatus('uploading');
-
+  
     try {
-      // 检查浏览器是否支持webkitGetAsEntry
-      if (window.DataTransferItem && 'webkitGetAsEntry' in DataTransferItem.prototype) {
-        // 创建一个虚拟的DataTransferItemList
-        const dataTransfer = new DataTransfer();
-        for (let i = 0; i < files.length; i++) {
-          dataTransfer.items.add(files[i]);
-        }
-
-        // 使用现有的processItems函数处理文件夹
-        const uploadedFiles = await processItems(dataTransfer.items);
-        setFiles((prev) => [...prev, ...uploadedFiles]);
-      } else {
-        // 降级处理：只处理文件夹中的文件
-        const promises = [];
-        for (let i = 0; i < files.length; i++) {
-          promises.push(handleSingleFileUpload(files[i]));
-        }
-        await Promise.all(promises);
+      // 直接处理选择的文件
+      const promises = [];
+      for (let i = 0; i < files.length; i++) {
+        promises.push(handleSingleFileUpload(files[i]));
       }
-
+      await Promise.all(promises);
+  
       setUploadStatus('success');
       // 3秒后重置状态
       setTimeout(() => setUploadStatus('idle'), 3000);
