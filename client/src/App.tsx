@@ -34,6 +34,9 @@ export const AppEditorContext = React.createContext<any>(null);
 // 主应用组件
 const App: React.FC = () => {
   // 状态定义
+  const [activeSidebarPanel, setActiveSidebarPanel] = useState<string>('explorer');
+
+
   const [files, setFiles] = useState<FileNodeType[]>([
     { id: "1", name: "src", type: "folder", children: [{ id: "2", name: "main.js", type: "file", content: "// JS code" }] },
     { id: "3", name: "README.md", type: "file", content: "# Project" },
@@ -55,7 +58,28 @@ const App: React.FC = () => {
   const dragInfo = useRef<{ dragging: boolean; bar: "left" | "center" | null }>({ dragging: false, bar: null });
   const menuBarRef = useRef<HTMLDivElement>(null);
 
-    // 添加节点
+  
+  // 删除节点
+  const deleteNode = (node: FileNodeType) => {
+    if (node.type === "folder" && node.children && node.children.length > 0) {
+      if (!window.confirm(`Delete folder "${node.name}" and all its contents?`)) return;
+    }
+    const removeNode = (nodes: FileNodeType[]): FileNodeType[] =>
+      nodes.flatMap((n) => {
+        if (n === node) return [];
+        if (n.type === "folder") return [{ ...n, children: removeNode(n.children || []) }];
+        return [n];
+      });
+    setFiles(removeNode(files));
+    if (activeFile === node) setActiveFile(null);
+  };
+
+  // 重命名节点
+  const renameNode = (node: FileNodeType, newName: string) => {
+    setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
+  };
+
+      // 添加节点
   const addNode = (parent: FileNodeType, type: "file" | "folder") => {
     const newNode: FileNodeType = {
       id: Date.now().toString(),
@@ -92,6 +116,43 @@ const App: React.FC = () => {
 
   // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
+
+  const [sidebarPanels, setSidebarPanels] = useState<{
+  id: string;
+  visible: boolean;
+  component: React.ReactNode;
+}[]>([
+  {
+    id: 'explorer',
+    visible: true,
+    component: (
+      <>
+        <FileExplorerTree
+          files={files}
+          setActiveFile={setActiveFile}
+          addNode={addNode}
+          deleteNode={deleteNode}
+          renameNode={renameNode}
+          activeFile={activeFile}
+        />
+      </>
+    )
+  },
+  {
+    id: 'search',
+    visible: false,
+    component: <div className="p-4 text-white">搜索面板</div>
+  },
+  {
+    id: 'extensions',
+    visible: false,
+    component: (
+      <div className="p-4 text-white">
+        <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
+      </div>
+    )
+  }
+]);
 
   const menuBar: MenuItem[] = MenuItemGenerator(
     files, 
@@ -188,28 +249,6 @@ const App: React.FC = () => {
     if (activeFile && activeFile.id === file.id) {
       setActiveFile({ ...file, content });
     }
-  };
-
-
-
-  // 删除节点
-  const deleteNode = (node: FileNodeType) => {
-    if (node.type === "folder" && node.children && node.children.length > 0) {
-      if (!window.confirm(`Delete folder "${node.name}" and all its contents?`)) return;
-    }
-    const removeNode = (nodes: FileNodeType[]): FileNodeType[] =>
-      nodes.flatMap((n) => {
-        if (n === node) return [];
-        if (n.type === "folder") return [{ ...n, children: removeNode(n.children || []) }];
-        return [n];
-      });
-    setFiles(removeNode(files));
-    if (activeFile === node) setActiveFile(null);
-  };
-
-  // 重命名节点
-  const renameNode = (node: FileNodeType, newName: string) => {
-    setFiles((prev) => updateTree(prev, node, (n) => ({ ...n, name: newName })));
   };
 
   // 拖拽相关函数
@@ -309,6 +348,47 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // 切换侧边栏面板的处理函数
+const handleSidebarPanelToggle = (panelId: string) => {
+  setActiveSidebarPanel(panelId);
+  setSidebarPanels(prev => prev.map(panel => ({
+    ...panel,
+    visible: panel.id === panelId
+  })));
+};
+
+// 侧边栏图标的SVG组件
+const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean, onClick: () => void }) => {
+  const iconColors = {
+    explorer: 'M22,19V3H2.01L2,19C2,20.1 2.9,21 4,21H20C21.1,21 22,20.1 22,19ZM8,13H16V15H8V13ZM8,9H16V11H8V9ZM4,7H20V5H4V7Z',
+    search: 'M15.5,14H14.71L14.43,13.73C15.41,12.59 16,11.11 16,9.5C16,5.91 13.09,3 9.5,3C5.91,3 3,5.91 3,9.5C3,13.09 5.91,16 9.5,16C11.11,16 12.59,15.41 13.73,14.43L14,14.71V15.5L19,20.5L20.5,19L15.5,14Z',
+    extensions: 'M19.66,3.99C18.88,3.63 18,3.36 17.11,3.19C15.93,3 14.69,3 13.5,3H9.5C8.31,3 7.07,3 5.89,3.19C5,3.36 4.12,3.63 3.34,3.99L1.66,18L18.34,18L20.02,3.99M5.64,4.35C6.27,4.16 6.93,4.06 7.61,4.06C8.84,4.06 10,4.06 11.22,4.06C11.78,4.53 12.19,5.09 12.65,5.47C13.11,5.09 13.52,4.53 14.08,4.06C15.3,4.06 16.43,4.06 17.66,4.06C18.34,4.06 19,4.16 19.63,4.35L19.91,6.35L19.46,6.24C18.83,6.05 18.17,5.95 17.49,5.95C16.26,5.95 15.13,5.95 13.91,5.95C13.35,6.42 12.94,6.98 12.48,7.36C12.02,6.98 11.61,6.42 11.05,5.95C9.83,5.95 8.7,5.95 7.47,5.95C6.79,5.95 6.13,6.05 5.5,6.24L5.05,6.35L5.33,4.35M7.21,15.54L6.77,13.47L5.09,12.91L6.5,10.88L6,9.1L8.03,8.14L8.5,9.93L10.91,9.66L10.4,11.86L11.81,12.91L10.18,13.47L9.77,15.54L7.21,15.54M16.91,12.91L15.23,13.47L14.79,15.54L12.23,15.54L11.81,13.47L10.12,12.91L11.53,10.88L11.02,9.1L13.05,8.14L13.52,9.93L15.93,9.66L15.42,11.86L16.91,12.91Z'
+  };
+
+  const IconSvg = iconColors[name as keyof typeof iconColors] || iconColors.explorer;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`p-3 flex flex-col items-center justify-center h-12 w-full transition-all duration-200 ${
+        active 
+          ? 'bg-blue-600 text-white' 
+          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+      }`}
+      title={
+        name === 'explorer' ? '文件资源管理器' :
+        name === 'search' ? '搜索' :
+        name === 'extensions' ? '扩展'
+        : ''
+      }
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "white" : "currentColor"}>
+        <path d={IconSvg} />
+      </svg>
+    </button>
+  );
+};
+
   return (
     <AppEditorContext.Provider value={contextValue}>
       <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
@@ -367,7 +447,36 @@ const App: React.FC = () => {
 
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
-          <div style={{ width: `${10}%`, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ width: `${10}%`, display: 'flex', flexDirection: 'column' }} className="bg-[#232323] border-r border-gray-700">
+            <SidebarIcon 
+              name="explorer" 
+              active={activeSidebarPanel === 'explorer'} 
+              onClick={() => handleSidebarPanelToggle('explorer')}
+            />
+            <SidebarIcon 
+              name="search" 
+              active={activeSidebarPanel === 'search'} 
+              onClick={() => handleSidebarPanelToggle('search')}
+            />
+            <SidebarIcon 
+              name="extensions" 
+              active={activeSidebarPanel === 'extensions'} 
+              onClick={() => handleSidebarPanelToggle('extensions')}
+            />
+          </div>
+
+          {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
+          <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }} className="bg-[#1E1E1E] border-r border-gray-700">
+            {/* 显示当前选中的侧边栏面板 */}
+            {sidebarPanels.filter(panel => panel.visible).map(panel => (
+              <div key={panel.id} className="flex-1">{panel.component}</div>
+            ))}
+          </div>
+          <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
+
+
+          {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
+          {/* <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}> */}
             {/* 修复FileExplorerTree组件的props */}
             {/* <FileExplorerTree
               files={files}
@@ -380,22 +489,9 @@ const App: React.FC = () => {
             
             {/* 插件侧边栏面板容器 */}
             {/* <PluginSidebarPanels pluginsLoaded={pluginsLoaded} /> */}
-          </div>
-          {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
-          <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}>
-            {/* 修复FileExplorerTree组件的props */}
-            <FileExplorerTree
-              files={files}
-              setActiveFile={setActiveFile}
-              addNode={addNode}
-              deleteNode={deleteNode}
-              renameNode={renameNode}
-              activeFile={activeFile}
-            />
-            
-            {/* 插件侧边栏面板容器 */}
-            <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
-          </div>
+          {/* </div> */}
+
+          
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
           {/* 中间编辑器 - 添加ref属性和改进样式 */}
