@@ -1,3 +1,5 @@
+import 'reset-css';
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Editor, { loader } from "@monaco-editor/react";
 
@@ -17,6 +19,8 @@ import { FileNodeType, ConsoleLog } from './types';
 import { vscodeDarkTheme, MenuItemGenerator } from './schema';
 import Menu from './components/Menu';
 import WelcomePage from './mainPage/WelcomePage';
+
+import Docker from './ui/docker/index';
 
 
 // 定义菜单相关类型
@@ -500,6 +504,8 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
         
         {/* 状态栏 */}
         <StatusBar />
+
+        <Docker />
       </div>
     </AppEditorContext.Provider> 
   );
