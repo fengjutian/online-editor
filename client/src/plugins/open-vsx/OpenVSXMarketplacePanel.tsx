@@ -23,6 +23,8 @@ const OpenVSXMarketplacePanel: React.FC<OpenVSXMarketplacePanelProps> = ({ conte
     try {
       // 直接调用插件中定义的方法
       const result = await (OpenVSXPlugin as any).methods.searchPlugins(query, pageNum);
+
+      
       setPlugins(result.extensions || []);
       setTotalCount(result.totalCount || 0);
     } catch (error) {

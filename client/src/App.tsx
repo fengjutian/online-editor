@@ -367,6 +367,20 @@ const App: React.FC = () => {
 
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
+          <div style={{ width: `${10}%`, display: 'flex', flexDirection: 'column' }}>
+            {/* 修复FileExplorerTree组件的props */}
+            {/* <FileExplorerTree
+              files={files}
+              setActiveFile={setActiveFile}
+              addNode={addNode}
+              deleteNode={deleteNode}
+              renameNode={renameNode}
+              activeFile={activeFile}
+            /> */}
+            
+            {/* 插件侧边栏面板容器 */}
+            {/* <PluginSidebarPanels pluginsLoaded={pluginsLoaded} /> */}
+          </div>
           {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
           <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}>
             {/* 修复FileExplorerTree组件的props */}
