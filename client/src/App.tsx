@@ -16,6 +16,7 @@ import { EditorContext as EditorContextType } from './plugins/types';
 import { FileNodeType, ConsoleLog } from './types';
 import { vscodeDarkTheme, MenuItemGenerator } from './schema';
 import Menu from './components/Menu';
+import WelcomePage from './mainPage/WelcomePage';
 
 
 // 定义菜单相关类型
@@ -120,43 +121,6 @@ const App: React.FC = () => {
 
   // 清除控制台
   const clearConsole = () => setConsoleLogs([]);
-
-//   const [sidebarPanels, setSidebarPanels] = useState<{
-//   id: string;
-//   visible: boolean;
-//   component: React.ReactNode;
-// }[]>([
-//   {
-//     id: 'explorer',
-//     visible: true,
-//     component: (
-//       <>
-//         <FileExplorerTree
-//           files={files}
-//           setActiveFile={setActiveFile}
-//           addNode={addNode}
-//           deleteNode={deleteNode}
-//           renameNode={renameNode}
-//           activeFile={activeFile}
-//         />
-//       </>
-//     )
-//   },
-//   {
-//     id: 'search',
-//     visible: false,
-//     component: <div className="p-4 text-white">搜索面板</div>
-//   },
-//   {
-//     id: 'extensions',
-//     visible: false,
-//     component: (
-//       <div className="p-4 text-white">
-//         <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
-//       </div>
-//     )
-//   }
-// ]);
 
 // 在组件内部使用useMemo确保sidebarPanels在files状态变化时重新计算
 const sidebarPanels = useMemo(() => [
@@ -390,10 +354,6 @@ const sidebarPanels = useMemo(() => [
   // 切换侧边栏面板的处理函数
 const handleSidebarPanelToggle = (panelId: string) => {
   setActiveSidebarPanel(panelId);
-  // setSidebarPanels(prev => prev.map(panel => ({
-  //   ...panel,
-  //   visible: panel.id === panelId
-  // })));
 };
 
 // 侧边栏图标的SVG组件
@@ -500,28 +460,30 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
           </div>
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
-          
-          {/* <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} /> */}
-
           {/* 中间编辑器 - 添加ref属性和改进样式 */}
           <div style={{ width: `${centerWidth}%`, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Editor
-              height="100%"
-              theme={theme}
-              defaultLanguage="javascript"
-              options={{
-                fontSize: 14,
-                minimap: { enabled: false },
-                scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
-                automaticLayout: true,
-              }}
-              value={activeFile?.content || ""}
-              onChange={(val) => activeFile && setFileContent(activeFile, val || "")}
-              // 添加ref回调函数
-              onMount={(editor) => {
-                editorRef.current = editor;
-              }}
-            />
+
+            {
+              activeFile ? (
+                <Editor
+                  height="100%"
+                  theme={theme}
+                  defaultLanguage="javascript"
+                  options={{
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+                    automaticLayout: true,
+                  }}
+                  value={activeFile?.content || ""}
+                  onChange={(val) => activeFile && setFileContent(activeFile, val || "")}
+                  // 添加ref回调函数
+                  onMount={(editor) => {
+                    editorRef.current = editor;
+                  }}
+                />
+              ) : <WelcomePage />
+           }
           </div>
           <div onMouseDown={() => startDrag("center")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
