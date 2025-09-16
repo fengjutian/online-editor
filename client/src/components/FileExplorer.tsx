@@ -134,7 +134,11 @@ export const FileExplorerTree: React.FC<FileExplorerTreeProps> = ({
   renameNode,
   activeFile 
 }) => (
-  <div className="text-white dark:bg-gray-900  p-1 overflow-auto h-full text-sm">
+  <div className="text-white dark:bg-gray-900  p-1 overflow-auto h-full text-sm" style={{
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#4B5563 #111827'
+  }}>
+
     <div className="p-1 mb-1 font-medium text-gray-500 dark:text-gray-400">
       Explorer
     </div>

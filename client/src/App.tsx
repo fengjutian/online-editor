@@ -391,7 +391,7 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
   return (
     <AppEditorContext.Provider value={contextValue}>
       <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900" onMouseMove={onDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
-        <div className="flex bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8 bg-[#232a35] bg-opacity-100 text-white" ref={menuBarRef}>
+        <div className="flex dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-8 bg-[#232a35] bg-opacity-100 text-white" ref={menuBarRef}>
           {menuBar.map((menu) => (
             <div
               key={menu.id}
