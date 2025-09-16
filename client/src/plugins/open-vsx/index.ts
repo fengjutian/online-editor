@@ -192,7 +192,6 @@ const OpenVSXPlugin: EditorPlugin & { methods?: any } = { // 使用类型断言�
         component: OpenVSXMarketplacePanel
       }
     ],
-    
     commands: [
       { id: 'open-vsx:open-marketplace',
         title: '打开插件市场',

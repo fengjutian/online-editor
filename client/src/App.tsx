@@ -28,20 +28,6 @@ interface MenuItem {
   enabled?: boolean;
 }
 
-interface MenuProps {
-  menu: MenuItem;
-  onClose: () => void;
-  x: number;
-  y: number;
-}
-
-interface SubMenuProps {
-  items: MenuItem[];
-  onClose: () => void;
-  x: number;
-  y: number;
-}
-
 // 创建全局上下文以在组件间共享编辑器状态
 export const AppEditorContext = React.createContext<any>(null);
 
@@ -513,10 +499,10 @@ const App: React.FC = () => {
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
           {/* 中间编辑器 */}
-          <div style={{ width: `${centerWidth}%` }}>
+          <div style={{ width: `${centerWidth}%`, height: '100%' }}>
             <Editor
-              height="100vh"
-              theme={theme}  
+              height="100%"
+              theme={theme}
               defaultLanguage="javascript"
               options={{
                 fontSize: 14,
