@@ -420,20 +420,7 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
         )}
 
         {/* 工具栏 */}
-        <div className="p-2 bg-gray-100 dark:bg-gray-800 flex gap-2 items-center border-b border-gray-200 dark:border-gray-700">
-          <button 
-            onClick={() => {
-              if (input.trim() !== "") {
-                runCode(input);
-                setInput("");
-              } else {
-                runCode();
-              }
-            }} 
-            className="px-2 py-1 bg-blue-500 text-white"
-          >Run</button>
-          <button onClick={clearConsole} className="px-2 py-1 bg-red-500 text-white">Clear Console</button>
-        </div>
+
 
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
@@ -505,7 +492,22 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
         {/* 状态栏 */}
         <StatusBar />
 
-        <Docker />
+        <Docker >
+          <div className="p-2  flex gap-2 items-center border-b border-gray-200 dark:border-gray-700">
+            <button 
+              onClick={() => {
+                if (input.trim() !== "") {
+                  runCode(input);
+                  setInput("");
+                } else {
+                  runCode();
+                }
+              }} 
+              className="px-2 py-1 bg-blue-500 text-white"
+            >运行</button>
+            <button onClick={clearConsole} className="px-2 py-1 bg-red-500 text-white">清空控制台</button>
+          </div>
+        </Docker>
       </div>
     </AppEditorContext.Provider> 
   );
