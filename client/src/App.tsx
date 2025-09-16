@@ -418,18 +418,18 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
 
         {/* 工具栏 */}
         <div className="p-2 bg-gray-100 dark:bg-gray-800 flex gap-2 items-center border-b border-gray-200 dark:border-gray-700">
-          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+          {/* <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
             <option value="java">Java</option>
-          </select>
+          </select> */}
 
           {/* 主题切换 */}
-          <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+          {/* <select value={theme} onChange={(e) => setTheme(e.target.value)}>
             <option value="vs">Light (VS)</option>
             <option value="vs-dark">Dark (VS)</option>
             <option value="vscode-dark">Dark+ (Custom)</option>
-          </select>
+          </select> */}
 
           <button 
             onClick={() => {
