@@ -173,25 +173,7 @@ const sidebarPanels = useMemo(() => [
   {
     id: 'extensions',
     visible: activeSidebarPanel === 'extensions',
-    component: (
-      <Modal
-          title="扩展" // 修改标题为更合适的名称
-          visible={activeSidebarPanel === 'extensions'}
-          onOk={() => setActiveSidebarPanel('explorer')} // 修改为设置回默认面板
-          afterClose={() => console.log('扩展面板已关闭')}
-          onCancel={() => setActiveSidebarPanel('explorer')} // 修改为设置回默认面板
-          closeOnEsc={true}
-          style={{
-            width: '90%',
-            maxWidth: '1200px',
-            maxHeight: '90vh'
-          }} // 确保Modal有合适的尺寸
-      >
-        <div className="p-4">
-          <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
-        </div>
-      </Modal>
-    )
+    component: null
   }
 ], [files, activeFile, activeSidebarPanel, setActiveFile, addNode, deleteNode, renameNode, pluginsLoaded]);
 
@@ -452,6 +434,27 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
             y={menuPos.y}
           />
         )}
+
+        { (
+          <Modal
+            title="扩展"
+            visible={activeSidebarPanel === 'extensions'}
+            onOk={() => setActiveSidebarPanel('explorer')}
+            afterClose={() => console.log('扩展面板已关闭')}
+            onCancel={() => setActiveSidebarPanel('explorer')}
+            closeOnEsc={true}
+            style={{
+              width: '60%',
+              maxWidth: '1200px',
+              maxHeight: '90vh'
+            }}
+          >
+            <div className="p-4">
+              <PluginSidebarPanels pluginsLoaded={pluginsLoaded} />
+            </div>
+          </Modal>
+        )}
+
 
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
