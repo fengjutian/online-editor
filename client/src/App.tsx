@@ -447,7 +447,7 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
 
         {/* 三栏布局 */}
         <div className="flex-1 flex relative">
-          <div style={{ width: `${10}%`, display: 'flex', flexDirection: 'column' }} className="bg-[#232323] border-r border-gray-700">
+          <div style={{ width: `${60}px`, display: 'flex', flexDirection: 'column' }} className="bg-[#232323] border-r border-gray-700">
             <SidebarIcon 
               name="explorer" 
               active={activeSidebarPanel === 'explorer'} 
@@ -474,25 +474,8 @@ const SidebarIcon = ({ name, active, onClick }: { name: string, active: boolean,
           </div>
           <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
 
-
-          {/* 左侧区域 - 包含文件管理器和插件侧边栏面板 */}
-          {/* <div style={{ width: `${leftWidth}%`, display: 'flex', flexDirection: 'column' }}> */}
-            {/* 修复FileExplorerTree组件的props */}
-            {/* <FileExplorerTree
-              files={files}
-              setActiveFile={setActiveFile}
-              addNode={addNode}
-              deleteNode={deleteNode}
-              renameNode={renameNode}
-              activeFile={activeFile}
-            /> */}
-            
-            {/* 插件侧边栏面板容器 */}
-            {/* <PluginSidebarPanels pluginsLoaded={pluginsLoaded} /> */}
-          {/* </div> */}
-
           
-          <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} />
+          {/* <div onMouseDown={() => startDrag("left")} style={{ width: "5px", cursor: "col-resize", backgroundColor: "#888" }} /> */}
 
           {/* 中间编辑器 - 添加ref属性和改进样式 */}
           <div style={{ width: `${centerWidth}%`, height: '100%', display: 'flex', flexDirection: 'column' }}>
